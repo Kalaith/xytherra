@@ -15,6 +15,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
+import { UI_CONSTANTS, getResourceColor, getNotificationColor } from '../../constants/uiConstants';
+import { Button } from '../ui/Button';
 import VictoryPanel from './VictoryPanel';
 import DiplomacyPanel from './DiplomacyPanel';
 import CombatLog from './CombatLog';
@@ -26,15 +28,6 @@ const RESOURCE_ICONS = {
   research: Microscope,
   alloys: Wrench,
   exoticMatter: Sparkles
-} as const;
-
-const RESOURCE_COLORS = {
-  energy: 'text-yellow-400',
-  minerals: 'text-gray-400',
-  food: 'text-green-400',
-  research: 'text-blue-400',
-  alloys: 'text-purple-400',
-  exoticMatter: 'text-pink-400'
 } as const;
 
 export const GameUI: React.FC = () => {
@@ -65,7 +58,7 @@ export const GameUI: React.FC = () => {
           <div className="flex items-center space-x-6">
             {Object.entries(playerEmpire.resources).map(([resource, amount]) => {
               const Icon = RESOURCE_ICONS[resource as keyof typeof RESOURCE_ICONS];
-              const color = RESOURCE_COLORS[resource as keyof typeof RESOURCE_COLORS];
+              const color = getResourceColor(resource);
               const income = playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
               
               return (
@@ -85,55 +78,47 @@ export const GameUI: React.FC = () => {
           {/* Right: Game Controls */}
           <div className="flex items-center space-x-2">
             {/* Panel Access Buttons */}
-            <button 
-              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'victory-conditions' ? 'none' : 'victory-conditions')}
-              className={`p-2 rounded-lg ${
-                gameState.uiState.sidePanel === 'victory-conditions' 
-                  ? 'bg-gold-600 text-white' 
-                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
-              }`}
-              title="Victory Conditions"
-            >
-              🏆
-            </button>
+            <div title="Victory Conditions">
+              <Button
+                variant={gameState.uiState.sidePanel === 'victory-conditions' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'victory-conditions' ? 'none' : 'victory-conditions')}
+              >
+                🏆
+              </Button>
+            </div>
             
-            <button 
-              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'diplomacy' ? 'none' : 'diplomacy')}
-              className={`p-2 rounded-lg ${
-                gameState.uiState.sidePanel === 'diplomacy' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
-              }`}
-              title="Diplomacy"
-            >
-              🤝
-            </button>
+            <div title="Diplomacy">
+              <Button
+                variant={gameState.uiState.sidePanel === 'diplomacy' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'diplomacy' ? 'none' : 'diplomacy')}
+              >
+                🤝
+              </Button>
+            </div>
             
-            <button 
-              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'combat-log' ? 'none' : 'combat-log')}
-              className={`p-2 rounded-lg ${
-                gameState.uiState.sidePanel === 'combat-log' 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
-              }`}
-              title="Combat Log"
-            >
-              ⚔️
-            </button>
+            <div title="Combat Log">
+              <Button
+                variant={gameState.uiState.sidePanel === 'combat-log' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'combat-log' ? 'none' : 'combat-log')}
+              >
+                ⚔️
+              </Button>
+            </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <Button
+              variant="primary"
               onClick={() => gameState.nextTurn()}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 font-semibold"
             >
               <SkipForward className="w-4 h-4" />
-              <span>Next Turn</span>
-            </motion.button>
+              Next Turn
+            </Button>
             
-            <button className="bg-slate-600 hover:bg-slate-700 text-white p-2 rounded-lg">
+            <Button variant="secondary" size="sm">
               <Settings className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -141,18 +126,13 @@ export const GameUI: React.FC = () => {
       {/* Notifications */}
       {notifications.length > 0 && (
         <div className="fixed top-20 right-4 z-40 space-y-2 max-w-sm">
-          {notifications.slice(-3).map((notification) => (
+          {notifications.slice(-UI_CONSTANTS.LAYOUT.MAX_NOTIFICATIONS_DISPLAY).map((notification) => (
             <motion.div
               key={notification.id}
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 100 }}
-              className={`bg-slate-800/90 backdrop-blur-sm border rounded-lg p-4 ${
-                notification.type === 'error' ? 'border-red-500' :
-                notification.type === 'warning' ? 'border-yellow-500' :
-                notification.type === 'success' ? 'border-green-500' :
-                'border-blue-500'
-              }`}
+              className={`bg-slate-800/90 backdrop-blur-sm border rounded-lg p-4 ${getNotificationColor(notification.type)}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -225,46 +205,34 @@ export const GameUI: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-3">
           {/* Left: View Controls */}
           <div className="flex items-center space-x-2">
-            <button
+            <Button
+              variant={gameState.uiState.currentView === 'galaxy' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => gameState.setCurrentView('galaxy')}
-              className={`px-3 py-2 rounded-lg ${
-                gameState.uiState.currentView === 'galaxy' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-600 text-slate-300 hover:bg-slate-700'
-              }`}
             >
               Galaxy
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={gameState.uiState.currentView === 'colony' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => gameState.setCurrentView('colony')}
-              className={`px-3 py-2 rounded-lg ${
-                gameState.uiState.currentView === 'colony' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-600 text-slate-300 hover:bg-slate-700'
-              }`}
             >
               Colonies
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={gameState.uiState.currentView === 'research' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => gameState.setCurrentView('research')}
-              className={`px-3 py-2 rounded-lg ${
-                gameState.uiState.currentView === 'research' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-600 text-slate-300 hover:bg-slate-700'
-              }`}
             >
               Research
-            </button>
-            <button
+            </Button>
+            <Button
+              variant={gameState.uiState.currentView === 'diplomacy' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => gameState.setCurrentView('diplomacy')}
-              className={`px-3 py-2 rounded-lg ${
-                gameState.uiState.currentView === 'diplomacy' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-slate-600 text-slate-300 hover:bg-slate-700'
-              }`}
             >
               Diplomacy
-            </button>
+            </Button>
           </div>
 
           {/* Center: Current Research */}
@@ -364,23 +332,25 @@ const PlanetInfoPanel: React.FC = () => {
           )}
 
           {!isColonized && (
-            <button
+            <Button
+              variant="success"
               onClick={() => gameState.colonizePlanet(selectedPlanet.id, playerEmpireId)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold"
+              className="w-full"
             >
               Colonize Planet
-            </button>
+            </Button>
           )}
         </div>
       ) : (
         <div className="space-y-3">
           <p className="text-slate-400">This planet has not been surveyed yet.</p>
-          <button
+          <Button
+            variant="primary"
             onClick={() => gameState.surveyPlanet(selectedPlanet.id, playerEmpireId)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+            className="w-full"
           >
             Survey Planet
-          </button>
+          </Button>
         </div>
       )}
     </div>

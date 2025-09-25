@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameSetup } from './components/game/GameSetup';
-import { GalaxyView } from './components/game/GalaxyView';
+import GalaxyView from './components/game/GalaxyView';
 import { GameUI } from './components/game/GameUI';
 import ResearchView from './components/game/ResearchView';
 import DiplomacyView from './components/game/DiplomacyView';

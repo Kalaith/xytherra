@@ -31,6 +31,11 @@ import {
   VICTORY_CONDITIONS,
   DEFAULT_SHIP_DESIGNS
 } from '../data/gameData';
+import { GAME_CONSTANTS } from '../constants/gameConstants';
+import { EmpireService } from '../services/empireService';
+import { GalaxyGenerationService } from '../services/galaxyService';
+import { AIService } from '../services/aiService';
+import { FleetService } from '../services/fleetService';
 
 interface GameStore extends GameState {
   // Game Actions
@@ -80,9 +85,9 @@ const createInitialGameState = (): GameState => ({
   galaxy: {
     size: 'medium',
     systems: {},
-    width: 100,
-    height: 100,
-    seed: Math.floor(Math.random() * 1000000)
+    width: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
+    height: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
+    seed: Math.floor(Math.random() * GAME_CONSTANTS.GALAXY.SEED_MAX)
   },
   empires: {},
   activeEvents: [],
@@ -115,36 +120,27 @@ export const useGameStore = create<GameStore>()(
           const newState = { ...state };
           newState.turn += 1;
           
-          // Process turn for all empires
+          // Process turn for all empires using EmpireService
           Object.keys(newState.empires).forEach(empireId => {
             const empire = newState.empires[empireId];
             if (empire) {
-              // Update resources based on income
-              Object.keys(empire.resourceIncome).forEach(resourceType => {
-                const income = empire.resourceIncome[resourceType as keyof typeof empire.resourceIncome];
-                empire.resources[resourceType as keyof typeof empire.resources] += income;
-              });
-              
-              // Process research
-              if (empire.currentResearch && empire.researchProgress[empire.currentResearch] !== undefined) {
-                empire.researchProgress[empire.currentResearch] += empire.resourceIncome.research || 0;
-                
-                // Check if research is complete
-                const tech = TECHNOLOGIES[empire.currentResearch];
-                if (tech && empire.researchProgress[empire.currentResearch] >= tech.cost) {
-                  empire.technologies.add(empire.currentResearch);
-                  empire.techsDiscovered += 1;
-                  delete empire.researchProgress[empire.currentResearch];
-                  empire.currentResearch = undefined;
-                  
-                  // Add notification for completed research
+              const result = EmpireService.processTurn(empire, (techId: string) => {
+                const tech = TECHNOLOGIES[techId];
+                if (tech) {
                   get().addNotification({
                     type: 'success',
                     title: 'Research Complete',
                     message: `${tech.name} research has been completed!`
                   });
                 }
-              }
+              });
+              
+              newState.empires[empireId] = result.empire;
+              
+              // Add any notifications from the turn processing
+              result.notifications.forEach(notification => {
+                get().addNotification(notification);
+              });
             }
           });
           
@@ -160,7 +156,7 @@ export const useGameStore = create<GameStore>()(
 
       startGame: (settings) => {
         set((state) => {
-          const galaxy = generateGalaxy(settings);
+          const galaxy = GalaxyGenerationService.generateGalaxyWithDistribution(settings);
           const empires = generateEmpires(settings);
           
           // Assign homeworlds and create starting fleets
@@ -191,21 +187,21 @@ export const useGameStore = create<GameStore>()(
               if (homeworld) {
                 empire.homeworld = homeworld.id;
                 
-                // Colonize the homeworld
+                // Colonize the homeworld using constants
                 homeworld.colonizedBy = empire.id;
                 homeworld.colony = {
                   id: `colony-${homeworld.id}`,
                   planetId: homeworld.id,
                   empireId: empire.id,
-                  population: 2,
+                  population: GAME_CONSTANTS.EMPIRE.HOMEWORLD_POPULATION,
                   buildings: [],
                   resourceOutput: {
-                    energy: 3,
-                    minerals: 3,
-                    food: 2,
-                    research: 1,
-                    alloys: 0,
-                    exoticMatter: 0
+                    energy: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.ENERGY,
+                    minerals: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.MINERALS,
+                    food: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.FOOD,
+                    research: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.RESEARCH,
+                    alloys: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.ALLOYS,
+                    exoticMatter: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.EXOTIC_MATTER
                   },
                   established: 1,
                   developmentLevel: 1
@@ -213,8 +209,8 @@ export const useGameStore = create<GameStore>()(
                 
                 empire.colonies.push(homeworld.id);
                 
-                // Create starting fleet
-                const startingFleet = createStartingFleet(empire.id, system);
+                // Create starting fleet using FleetService
+                const startingFleet = FleetService.createStartingFleet(empire.id, system);
                 empire.fleets.push(startingFleet);
                 
                 // Discover the home system
@@ -304,34 +300,57 @@ export const useGameStore = create<GameStore>()(
       // Planet Actions
       colonizePlanet: (planetId, empireId) => {
         set((state) => {
+          const empire = state.empires[empireId];
+          if (!empire) return state;
+          
           // Find the planet and add colony
           Object.values(state.galaxy.systems).forEach(system => {
             const planet = system.planets.find(p => p.id === planetId);
             if (planet && !planet.colonizedBy) {
+              // Check if empire can afford colonization
+              const cost = EmpireService.calculateColonizationCost(planet, empire);
+              const affordability = EmpireService.canAffordCost(empire, cost);
+              
+              if (!affordability.canAfford) {
+                get().addNotification({
+                  type: 'error',
+                  title: 'Colonization Failed',
+                  message: `Insufficient resources: ${affordability.missingResources.join(', ')}`
+                });
+                return;
+              }
+              
+              // Deduct resources
+              const updatedEmpire = EmpireService.deductResources(empire, cost);
+              state.empires[empireId] = updatedEmpire;
+              
               planet.colonizedBy = empireId;
               planet.colony = {
                 id: `colony-${planetId}`,
                 planetId,
                 empireId,
-                population: 1,
+                population: GAME_CONSTANTS.EMPIRE.COLONY_POPULATION,
                 buildings: [],
                 resourceOutput: {
-                  energy: 1,
-                  minerals: 1,
-                  food: 1,
-                  research: 1,
-                  alloys: 0,
-                  exoticMatter: 0
+                  energy: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ENERGY,
+                  minerals: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.MINERALS,
+                  food: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.FOOD,
+                  research: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.RESEARCH,
+                  alloys: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ALLOYS,
+                  exoticMatter: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.EXOTIC_MATTER
                 },
                 established: state.turn,
                 developmentLevel: 1
               };
               
               // Add to empire's colonies list
-              const empire = state.empires[empireId];
-              if (empire) {
-                empire.colonies.push(planetId);
-              }
+              updatedEmpire.colonies.push(planetId);
+              
+              get().addNotification({
+                type: 'success',
+                title: 'Colony Established',
+                message: `Successfully colonized ${planet.name}!`
+              });
             }
           });
           return state;
@@ -365,20 +384,12 @@ export const useGameStore = create<GameStore>()(
       },
 
       createFleet: (empireId, systemId) => {
-        const fleetId = `fleet-${Date.now()}`;
+        const fleetId = `${GAME_CONSTANTS.FLEET.FLEET_ID_PREFIX}${Date.now()}`;
         set((state) => {
           const empire = state.empires[empireId];
           const system = state.galaxy.systems[systemId];
           if (empire && system) {
-            const newFleet: Fleet = {
-              id: fleetId,
-              name: `Fleet ${empire.fleets.length + 1}`,
-              empireId,
-              ships: [],
-              coordinates: system.coordinates,
-              mission: 'idle',
-              movementPoints: 3
-            };
+            const newFleet = FleetService.createFleet(empireId, systemId, system);
             empire.fleets.push(newFleet);
           }
           return state;
@@ -484,16 +495,16 @@ export const useGameStore = create<GameStore>()(
           };
         }
         
-        // Simple combat resolution - can be expanded later
-        const attackPower = attacker.fleets.reduce((total, fleet) => total + fleet.ships.length * 10, 0);
-        const defensePower = defender.fleets.reduce((total, fleet) => total + fleet.ships.length * 10, 0);
+        // Use EmpireService to calculate combat power
+        const attackPower = EmpireService.calculateCombatPower(attacker);
+        const defensePower = EmpireService.calculateCombatPower(defender);
         
-        // Apply combat modifiers
+        // Apply combat modifiers from constants
         const attackModifier = COMBAT_MODIFIERS.factionBonuses[attacker.faction]?.attack || 1.0;
         const defenseModifier = COMBAT_MODIFIERS.factionBonuses[defender.faction]?.defense || 1.0;
         
         const finalAttackPower = attackPower * attackModifier;
-        const finalDefensePower = defensePower * defenseModifier * COMBAT_MODIFIERS.planetaryDefense;
+        const finalDefensePower = defensePower * defenseModifier * GAME_CONSTANTS.COMBAT.PLANETARY_DEFENSE_BONUS;
         
         const result: CombatResult = {
           attacker: {
@@ -511,12 +522,12 @@ export const useGameStore = create<GameStore>()(
           winner: finalAttackPower > finalDefensePower ? 'attacker' : 'defender',
           planetCaptured: false,
           experienceGained: {
-            [attackerId]: 10,
-            [defenderId]: 5
+            [attackerId]: GAME_CONSTANTS.COMBAT.BASE_EXPERIENCE_GAIN.WINNER,
+            [defenderId]: GAME_CONSTANTS.COMBAT.BASE_EXPERIENCE_GAIN.LOSER
           }
         };
         
-        // Update combat experience
+        // Update combat experience using constants
         set((state) => ({
           ...state,
           empires: {
@@ -541,65 +552,17 @@ export const useGameStore = create<GameStore>()(
         const state = get();
         
         Object.values(state.empires).forEach(empire => {
-          if (!empire.isPlayer) {
-            // AI decision making based on personality
-            const aiPersonality = empire.aiPersonality;
+          if (!empire.isPlayer && empire.aiPersonality) {
+            // Get AI decisions using AIService
+            const decisions = AIService.processAITurn(empire, state);
             
-            // Research decisions
-            if (!empire.currentResearch && aiPersonality) {
-              const availableTechs = Object.keys(TECHNOLOGIES).filter(techId => 
-                !empire.technologies.has(techId) && 
-                TECHNOLOGIES[techId].prerequisites.every(prereq => empire.technologies.has(prereq))
-              );
-              
-              if (availableTechs.length > 0) {
-                let chosenTech: string;
-                
-                switch (aiPersonality) {
-                  case 'aggressive':
-                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'weapons') || availableTechs[0];
-                    break;
-                  case 'defensive':
-                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'shields') || availableTechs[0];
-                    break;
-                  case 'scientific':
-                    chosenTech = availableTechs.sort((a, b) => TECHNOLOGIES[b].cost - TECHNOLOGIES[a].cost)[0];
-                    break;
-                  case 'expansionist':
-                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'propulsion') || availableTechs[0];
-                    break;
-                  default:
-                    chosenTech = availableTechs[Math.floor(Math.random() * availableTechs.length)];
-                }
-                
-                get().startResearch(empire.id, chosenTech);
-              }
-            }
-            
-            // Expansion decisions
-            if (aiPersonality === 'expansionist' || aiPersonality === 'aggressive') {
-              // Look for unclaimed planets to colonize
-              const systems = Object.values(state.galaxy.systems);
-              const uncolonizedPlanets = [];
-              
-              for (const system of systems) {
-                for (const planet of system.planets) {
-                  if (!planet.colony && planet.surveyedBy && planet.surveyedBy.length > 0) {
-                    uncolonizedPlanets.push(planet);
-                  }
-                }
-              }
-              
-              if (uncolonizedPlanets.length > 0) {
-                const targetPlanet = uncolonizedPlanets[Math.floor(Math.random() * uncolonizedPlanets.length)];
-                // AI would attempt to colonize this planet (simplified)
-                get().addNotification({
-                  type: 'info',
-                  title: 'AI Expansion',
-                  message: `${empire.name} is expanding to new worlds`
-                });
-              }
-            }
+            // Execute AI decisions
+            AIService.executeAIDecisions(empire, decisions, state, {
+              startResearch: get().startResearch,
+              colonizePlanet: get().colonizePlanet,
+              createFleet: get().createFleet,
+              addNotification: get().addNotification
+            });
           }
         });
       },
@@ -668,37 +631,6 @@ export const useGameStore = create<GameStore>()(
 );
 
 // Helper functions for game generation
-function generateGalaxy(settings: GameSettings): Galaxy {
-  const size = settings.galaxySize;
-  const dimensions = size === 'small' ? 60 : size === 'medium' ? 100 : 140;
-  const numSystems = size === 'small' ? 20 : size === 'medium' ? 35 : 50;
-  
-  const galaxy: Galaxy = {
-    size,
-    systems: {},
-    width: dimensions,
-    height: dimensions,
-    seed: Math.floor(Math.random() * 1000000)
-  };
-  
-  // Generate star systems
-  for (let i = 0; i < numSystems; i++) {
-    const systemId = `system-${i}`;
-    const system: StarSystem = {
-      id: systemId,
-      name: generateSystemName(),
-      coordinates: {
-        x: Math.random() * dimensions,
-        y: Math.random() * dimensions
-      },
-      planets: generatePlanetsForSystem(systemId),
-      discoveredBy: []
-    };
-    galaxy.systems[systemId] = system;
-  }
-  
-  return galaxy;
-}
 
 // AI Helper Functions
 function getRandomAIPersonality(): AIPersonality {
@@ -715,37 +647,6 @@ function getAIName(personality: AIPersonality, faction: FactionType): string {
   // Fallback to random template
   const randomTemplate = AI_EMPIRE_TEMPLATES[Math.floor(Math.random() * AI_EMPIRE_TEMPLATES.length)];
   return randomTemplate.name;
-}
-
-// Ship Creation Functions
-function createShip(designId: keyof typeof DEFAULT_SHIP_DESIGNS): Ship {
-  const design = DEFAULT_SHIP_DESIGNS[designId];
-  return {
-    id: `ship-${Date.now()}-${Math.random()}`,
-    design: {
-      ...design,
-      components: []
-    } as ShipDesign,
-    health: design.stats.health,
-    experience: 0,
-    stats: { ...design.stats }
-  };
-}
-
-function createStartingFleet(empireId: string, homeSystem: StarSystem): Fleet {
-  const fleet: Fleet = {
-    id: `fleet-${empireId}-home`,
-    name: 'Home Fleet',
-    empireId,
-    ships: [
-      createShip('scout'),
-      createShip('corvette')
-    ],
-    coordinates: homeSystem.coordinates,
-    mission: 'defend',
-    movementPoints: 3
-  };
-  return fleet;
 }
 
 function generateEmpires(settings: GameSettings): Record<string, Empire> {
@@ -767,20 +668,20 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
       homeworld: '', // Will be set when placing homeworld
       faction: factionType,
       resources: {
-        energy: 50,
-        minerals: 50,
-        food: 20,
-        research: 10,
-        alloys: 0,
-        exoticMatter: 0
+        energy: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.ENERGY,
+        minerals: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.MINERALS,
+        food: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.FOOD,
+        research: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.RESEARCH,
+        alloys: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.ALLOYS,
+        exoticMatter: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.EXOTIC_MATTER
       },
       resourceIncome: {
-        energy: 5,
-        minerals: 5,
-        food: 3,
-        research: 2,
-        alloys: 0,
-        exoticMatter: 0
+        energy: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.ENERGY,
+        minerals: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.MINERALS,
+        food: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.FOOD,
+        research: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.RESEARCH,
+        alloys: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.ALLOYS,
+        exoticMatter: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.EXOTIC_MATTER
       },
       technologies: new Set(FACTION_BONUSES[factionType].startingTechs),
       researchProgress: {},
@@ -804,76 +705,7 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
   return empires;
 }
 
-function generatePlanetsForSystem(systemId: string): Planet[] {
-  const numPlanets = Math.floor(Math.random() * 4) + 1; // 1-4 planets per system
-  const planets: Planet[] = [];
-  
-  for (let i = 0; i < numPlanets; i++) {
-    const planetId = `${systemId}-planet-${i}`;
-    const planetTypes = ['water', 'volcanic', 'rocky', 'gas', 'ice', 'living', 'desolate', 'exotic'] as const;
-    const weights = [15, 15, 20, 15, 15, 5, 12, 3]; // Weighted probabilities
-    
-    const planetType = weightedRandomChoice(planetTypes, weights);
-    
-    const planet: Planet = {
-      id: planetId,
-      name: generatePlanetName(),
-      type: planetType,
-      coordinates: { x: 0, y: 0 }, // Relative to system
-      size: Math.floor(Math.random() * 5) + 1,
-      traits: generatePlanetTraits(),
-      systemId,
-      surveyedBy: []
-    };
-    
-    planets.push(planet);
-  }
-  
-  return planets;
-}
-
-function generatePlanetTraits() {
-  const availableTraits = Object.values(PLANET_TRAITS);
-  const numTraits = Math.random() < 0.7 ? (Math.random() < 0.3 ? 2 : 1) : 0;
-  const selectedTraits: typeof availableTraits = [];
-  
-  for (let i = 0; i < numTraits; i++) {
-    const trait = availableTraits[Math.floor(Math.random() * availableTraits.length)];
-    if (!selectedTraits.includes(trait)) {
-      selectedTraits.push(trait);
-    }
-  }
-  
-  return selectedTraits;
-}
-
-function generateSystemName(): string {
-  const prefixes = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Theta', 'Sigma'];
-  const suffixes = ['Centauri', 'Prime', 'Major', 'Minor', 'Nova', 'Nebula', 'Reach', 'Gate'];
-  return `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
-}
-
-function generatePlanetName(): string {
-  const prefixes = ['Neo', 'Prima', 'Alta', 'Nova', 'Terra', 'Magna', 'Ultima', 'Proxima'];
-  const suffixes = ['I', 'II', 'III', 'IV', 'V', 'Prime', 'Major', 'Minor', 'Beta', 'Gamma'];
-  return `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
-}
-
 function generateEmpireColor(index: number): string {
   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
   return colors[index % colors.length];
-}
-
-function weightedRandomChoice<T>(items: readonly T[], weights: number[]): T {
-  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-  let randomWeight = Math.random() * totalWeight;
-  
-  for (let i = 0; i < items.length; i++) {
-    randomWeight -= weights[i];
-    if (randomWeight <= 0) {
-      return items[i];
-    }
-  }
-  
-  return items[items.length - 1]; // Fallback
 }

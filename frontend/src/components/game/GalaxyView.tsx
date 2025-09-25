@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import type { PlanetType, StarSystem, Planet } from '../../types/game.d.ts';
+import { GAME_CONSTANTS } from '../../constants/gameConstants';
 
 const PLANET_ICONS = {
   water: Waves,
@@ -85,7 +86,8 @@ const SystemDisplay: React.FC<SystemDisplayProps> = ({ system, onSystemClick, on
         {/* Planets orbiting around the star */}
         {system.planets.map((planet, index) => {
           const angle = (index * 360) / system.planets.length;
-          const radius = 15 + index * 8; // Increasing orbit radius
+          const radius = GAME_CONSTANTS.PLANET.ORBIT_BASE_RADIUS + 
+                        index * GAME_CONSTANTS.PLANET.ORBIT_RADIUS_INCREMENT; // Use constants
           const x = Math.cos((angle * Math.PI) / 180) * radius;
           const y = Math.sin((angle * Math.PI) / 180) * radius;
           
@@ -134,7 +136,7 @@ const SystemDisplay: React.FC<SystemDisplayProps> = ({ system, onSystemClick, on
   );
 };
 
-export const GalaxyView: React.FC = () => {
+export default function GalaxyView() {
   const galaxy = useGameStore((state) => state.galaxy);
   const selectedPlanet = useGameStore((state) => state.uiState.selectedPlanet);
   const setSelectedPlanet = useGameStore((state) => state.setSelectedPlanet);

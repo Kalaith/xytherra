@@ -16,6 +16,9 @@ import {
   Factory
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
+import { UI_CONSTANTS, getResourceColor } from '../../constants/uiConstants';
+import { GAME_CONSTANTS } from '../../constants/gameConstants';
+import { Button } from '../ui/Button';
 import type { Colony, Building as BuildingType, Planet } from '../../types/game.d.ts';
 
 const ColonyView: React.FC = () => {
@@ -42,15 +45,16 @@ const ColonyView: React.FC = () => {
   });
 
   const getResourceIcon = (resource: string) => {
-    switch (resource) {
-      case 'energy': return <Zap className="w-4 h-4 text-yellow-400" />;
-      case 'minerals': return <Coins className="w-4 h-4 text-gray-400" />;
-      case 'food': return <Wheat className="w-4 h-4 text-green-400" />;
-      case 'research': return <Microscope className="w-4 h-4 text-blue-400" />;
-      case 'alloys': return <Wrench className="w-4 h-4 text-orange-400" />;
-      case 'exoticMatter': return <Sparkles className="w-4 h-4 text-purple-400" />;
-      default: return <Building className="w-4 h-4 text-gray-400" />;
-    }
+    const iconMap: Record<string, React.ReactElement> = {
+      energy: <Zap className={`w-4 h-4 ${getResourceColor('energy')}`} />,
+      minerals: <Coins className={`w-4 h-4 ${getResourceColor('minerals')}`} />,
+      food: <Wheat className={`w-4 h-4 ${getResourceColor('food')}`} />,
+      research: <Microscope className={`w-4 h-4 ${getResourceColor('research')}`} />,
+      alloys: <Wrench className={`w-4 h-4 ${getResourceColor('alloys')}`} />,
+      exoticMatter: <Sparkles className={`w-4 h-4 ${getResourceColor('exoticMatter')}`} />
+    };
+    
+    return iconMap[resource] || <Building className="w-4 h-4 text-gray-400" />;
   };
 
   const getColonySpecialization = (colony: Colony) => {
@@ -71,19 +75,22 @@ const ColonyView: React.FC = () => {
   };
 
   const getPopulationGrowth = (colony: Colony) => {
-    const growthRate = Math.max(0, colony.resourceOutput.food - colony.population * 0.1);
+    const growthRate = Math.max(0, colony.resourceOutput.food - colony.population * GAME_CONSTANTS.COLONY.FOOD_CONSUMPTION_PER_POP);
     return Math.round(growthRate * 100) / 100;
   };
 
   const getColonyHappiness = (colony: Colony, planet: Planet) => {
-    let happiness = 50; // Base happiness
+    let happiness = GAME_CONSTANTS.COLONY.BASE_HAPPINESS;
     
     // Population density effect
-    if (colony.population > planet.size * 2) happiness -= 20;
-    else if (colony.population < planet.size) happiness += 10;
+    if (colony.population > planet.size * GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_THRESHOLD) {
+      happiness -= GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_PENALTY;
+    } else if (colony.population < planet.size) {
+      happiness += GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.UNDERPOPULATED_BONUS;
+    }
     
     // Development level effect
-    happiness += colony.developmentLevel * 5;
+    happiness += colony.developmentLevel * GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.DEVELOPMENT_BONUS_PER_LEVEL;
     
     // Building effects
     colony.buildings.forEach(building => {
@@ -255,12 +262,13 @@ const ColonyDetailPanel: React.FC<{ colony: Colony; planet: Planet; system: stri
   ];
 
   const getBuildingIcon = (type: string) => {
-    switch (type) {
-      case 'energy': return <Zap className="w-5 h-5 text-yellow-400" />;
-      case 'minerals': return <Coins className="w-5 h-5 text-gray-400" />;
-      case 'research': return <Microscope className="w-5 h-5 text-blue-400" />;
-      default: return <Building className="w-5 h-5 text-gray-400" />;
-    }
+    const iconMap: Record<string, React.ReactElement> = {
+      energy: <Zap className={`w-5 h-5 ${getResourceColor('energy')}`} />,
+      minerals: <Coins className={`w-5 h-5 ${getResourceColor('minerals')}`} />,
+      research: <Microscope className={`w-5 h-5 ${getResourceColor('research')}`} />
+    };
+    
+    return iconMap[type] || <Building className="w-5 h-5 text-gray-400" />;
   };
 
   return (
@@ -298,9 +306,9 @@ const ColonyDetailPanel: React.FC<{ colony: Colony; planet: Planet; system: stri
                     <div className="text-slate-400 text-xs">{building.description}</div>
                   </div>
                 </div>
-                <button className="text-red-400 hover:text-red-300 text-xs">
+                <Button variant="danger" size="sm">
                   Demolish
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -321,9 +329,9 @@ const ColonyDetailPanel: React.FC<{ colony: Colony; planet: Planet; system: stri
                     <div className="text-slate-400 text-xs">{building.description}</div>
                   </div>
                 </div>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">
+                <Button variant="primary" size="sm">
                   Build
-                </button>
+                </Button>
               </div>
               
               <div className="flex space-x-4 text-xs text-slate-400">
