@@ -3,17 +3,44 @@ import { useGameStore } from './stores/gameStore';
 import { GameSetup } from './components/game/GameSetup';
 import { GalaxyView } from './components/game/GalaxyView';
 import { GameUI } from './components/game/GameUI';
+import ResearchView from './components/game/ResearchView';
+import DiplomacyView from './components/game/DiplomacyView';
 import './styles/globals.css';
 
 function App() {
   const phase = useGameStore((state) => state.phase);
+  const currentView = useGameStore((state) => state.uiState.currentView);
+  
+  const renderGameView = () => {
+    switch (currentView) {
+      case 'galaxy':
+        return <GalaxyView />;
+      case 'research':
+        return <ResearchView />;
+      case 'diplomacy':
+        return <DiplomacyView />;
+      case 'colony':
+      case 'fleets':
+      case 'victory':
+        return (
+          <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-2">Coming Soon</h2>
+              <p className="text-slate-400">The {currentView} view is under development</p>
+            </div>
+          </div>
+        );
+      default:
+        return <GalaxyView />;
+    }
+  };
   
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {phase === 'setup' && <GameSetup />}
       {phase === 'playing' && (
         <>
-          <GalaxyView />
+          {renderGameView()}
           <GameUI />
         </>
       )}

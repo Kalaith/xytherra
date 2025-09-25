@@ -574,7 +574,20 @@ export const useGameStore = create<GameStore>()(
         isGameOver: state.isGameOver,
         winner: state.winner,
         victoryType: state.victoryType
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Convert technologies arrays back to Sets after rehydration
+          Object.keys(state.empires).forEach(empireId => {
+            const empire = state.empires[empireId];
+            if (empire.technologies && Array.isArray(empire.technologies)) {
+              empire.technologies = new Set(empire.technologies);
+            } else if (!empire.technologies) {
+              empire.technologies = new Set();
+            }
+          });
+        }
+      }
     }
   )
 );
