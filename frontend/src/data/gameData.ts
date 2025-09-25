@@ -1,6 +1,6 @@
 // Static game data for planet types and their associated technologies
 
-import type { PlanetType, TechDomain, Technology, PlanetTrait } from '../types/game.d.ts';
+import type { PlanetType, TechDomain, Technology, PlanetTrait, AIPersonality, FactionType } from '../types/game.d.ts';
 
 export interface PlanetTypeInfo {
   id: PlanetType;
@@ -11,6 +11,20 @@ export interface PlanetTypeInfo {
   baseResourceMultipliers: Record<string, number>;
   adaptationRequired: boolean;
   strategicResources: string[];
+}
+
+export interface AIEmpireTemplate {
+  name: string;
+  color: string;
+  faction: FactionType;
+  personality: AIPersonality;
+  description: string;
+  preferredStrategies: string[];
+  aggressionLevel: number; // 0-10
+  expansionPriority: number; // 0-10
+  diplomacyPriority: number; // 0-10
+  economyPriority: number; // 0-10
+  researchPriority: number; // 0-10
 }
 
 export const PLANET_TYPES: Record<PlanetType, PlanetTypeInfo> = {
@@ -527,3 +541,150 @@ export const FACTION_BONUSES = {
     startingTechs: ['basic-survival-tech']
   }
 } as const;
+
+// AI Empire Templates for procedural generation
+export const AI_EMPIRE_TEMPLATES: AIEmpireTemplate[] = [
+  {
+    name: 'Crimson Hegemony',
+    color: '#dc2626',
+    faction: 'forge-union',
+    personality: 'aggressive',
+    description: 'A militaristic empire focused on conquest and expansion',
+    preferredStrategies: ['military-expansion', 'technological-superiority', 'resource-control'],
+    aggressionLevel: 9,
+    expansionPriority: 8,
+    diplomacyPriority: 3,
+    economyPriority: 6,
+    researchPriority: 7
+  },
+  {
+    name: 'Azure Commonwealth',
+    color: '#2563eb',
+    faction: 'oceanic-concord',
+    personality: 'diplomatic',
+    description: 'A peaceful federation seeking cooperation and mutual prosperity',
+    preferredStrategies: ['diplomatic-victory', 'economic-growth', 'defensive-alliances'],
+    aggressionLevel: 2,
+    expansionPriority: 5,
+    diplomacyPriority: 9,
+    economyPriority: 8,
+    researchPriority: 6
+  },
+  {
+    name: 'Emerald Collective',
+    color: '#16a34a',
+    faction: 'verdant-kin',
+    personality: 'scientific',
+    description: 'Bio-engineers seeking to understand and preserve all life',
+    preferredStrategies: ['research-dominance', 'biological-mastery', 'peaceful-expansion'],
+    aggressionLevel: 3,
+    expansionPriority: 6,
+    diplomacyPriority: 7,
+    economyPriority: 7,
+    researchPriority: 9
+  },
+  {
+    name: 'Stellar Wanderers',
+    color: '#7c3aed',
+    faction: 'nomad-fleet',
+    personality: 'expansionist',
+    description: 'Nomadic fleet-builders exploring the far reaches of space',
+    preferredStrategies: ['rapid-expansion', 'exploration-focus', 'mobility-advantage'],
+    aggressionLevel: 5,
+    expansionPriority: 9,
+    diplomacyPriority: 5,
+    economyPriority: 6,
+    researchPriority: 7
+  },
+  {
+    name: 'Iron Consortium',
+    color: '#ea580c',
+    faction: 'ashborn-syndicate',
+    personality: 'economic',
+    description: 'Resource-focused traders building an economic empire',
+    preferredStrategies: ['economic-dominance', 'trade-networks', 'resource-monopoly'],
+    aggressionLevel: 4,
+    expansionPriority: 7,
+    diplomacyPriority: 6,
+    economyPriority: 9,
+    researchPriority: 5
+  },
+  {
+    name: 'Void Guardians',
+    color: '#1f2937',
+    faction: 'forge-union',
+    personality: 'defensive',
+    description: 'Fortress builders focused on impregnable defenses',
+    preferredStrategies: ['defensive-mastery', 'fortification-focus', 'technological-barriers'],
+    aggressionLevel: 3,
+    expansionPriority: 4,
+    diplomacyPriority: 6,
+    economyPriority: 7,
+    researchPriority: 8
+  }
+];
+
+// Combat System Data
+export const COMBAT_MODIFIERS = {
+  planetaryDefense: 1.5, // Defending on a planet
+  fleetExperience: {
+    novice: 1.0,     // 0-10 battles
+    veteran: 1.1,    // 11-25 battles
+    elite: 1.2,      // 26-50 battles
+    legendary: 1.3   // 50+ battles
+  },
+  factionBonuses: {
+    'forge-union': { attack: 1.1, defense: 1.0 },
+    'oceanic-concord': { attack: 0.95, defense: 1.15 },
+    'verdant-kin': { attack: 0.9, defense: 1.1 },
+    'nomad-fleet': { attack: 1.05, defense: 0.9 },
+    'ashborn-syndicate': { attack: 1.0, defense: 1.05 }
+  }
+};
+
+// Victory Condition Thresholds
+export const VICTORY_CONDITIONS = {
+  domination: {
+    name: 'Galactic Domination',
+    description: 'Control 60% of all inhabited planets',
+    threshold: 0.6,
+    checkFunction: (empire: any, galaxy: any) => {
+      const systems = Object.values(galaxy.systems) as any[];
+      const totalPlanets = systems.reduce((count, system) => {
+        return count + system.planets.filter((p: any) => p.colony).length;
+      }, 0);
+      const controlledPlanets = empire.colonies.length;
+      return totalPlanets > 0 ? controlledPlanets / totalPlanets : 0;
+    }
+  },
+  technology: {
+    name: 'Technological Supremacy',
+    description: 'Research 80% of all available technologies',
+    threshold: 0.8,
+    checkFunction: (empire: any, gameData: any) => {
+      const totalTechs = Object.keys(gameData.TECHNOLOGIES).length;
+      return empire.technologies.size / totalTechs;
+    }
+  },
+  diplomatic: {
+    name: 'Diplomatic Victory',
+    description: 'Form alliances with 75% of surviving empires',
+    threshold: 0.75,
+    checkFunction: (empire: any, empires: any) => {
+      const otherEmpires = Object.values(empires).filter((e: any) => e.id !== empire.id && !e.isDefeated);
+      const allies = otherEmpires.filter((e: any) => 
+        empire.diplomaticStatus[e.id] === 'allied' || empire.diplomaticStatus[e.id] === 'federated'
+      );
+      return otherEmpires.length > 0 ? allies.length / otherEmpires.length : 0;
+    }
+  },
+  economic: {
+    name: 'Economic Supremacy',
+    description: 'Accumulate 10,000 resources across all types',
+    threshold: 10000,
+    checkFunction: (empire: any) => {
+      const resources = Object.values(empire.resources) as number[];
+      return resources.reduce((sum: number, val: number) => sum + val, 0);
+    }
+  }
+};

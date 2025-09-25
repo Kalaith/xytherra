@@ -15,9 +15,19 @@ import type {
   SidePanel,
   Notification,
   FactionType,
-  ResourceType
+  ResourceType,
+  CombatResult,
+  VictoryProgress,
+  AIPersonality
 } from '../types/game.d.ts';
-import { TECHNOLOGIES, FACTION_BONUSES, PLANET_TRAITS } from '../data/gameData';
+import { 
+  TECHNOLOGIES, 
+  FACTION_BONUSES, 
+  PLANET_TRAITS, 
+  AI_EMPIRE_TEMPLATES, 
+  COMBAT_MODIFIERS, 
+  VICTORY_CONDITIONS 
+} from '../data/gameData';
 
 interface GameStore extends GameState {
   // Game Actions
@@ -39,6 +49,15 @@ interface GameStore extends GameState {
   // Fleet Actions
   moveFleet: (fleetId: string, destination: Coordinates) => void;
   createFleet: (empireId: string, systemId: string) => string;
+  
+  // Combat System
+  resolveCombat: (attackerId: string, defenderId: string, location: string) => CombatResult;
+  
+  // AI System
+  processAITurns: () => void;
+  
+  // Victory Conditions
+  checkVictoryConditions: () => VictoryProgress[];
   
   // UI State Management
   uiState: UIState;
@@ -111,6 +130,7 @@ export const useGameStore = create<GameStore>()(
                 const tech = TECHNOLOGIES[empire.currentResearch];
                 if (tech && empire.researchProgress[empire.currentResearch] >= tech.cost) {
                   empire.technologies.add(empire.currentResearch);
+                  empire.techsDiscovered += 1;
                   delete empire.researchProgress[empire.currentResearch];
                   empire.currentResearch = undefined;
                   
@@ -127,6 +147,12 @@ export const useGameStore = create<GameStore>()(
           
           return newState;
         });
+        
+        // Process AI turns after state update
+        get().processAITurns();
+        
+        // Check victory conditions
+        get().checkVictoryConditions();
       },
 
       startGame: (settings) => {
@@ -364,6 +390,176 @@ export const useGameStore = create<GameStore>()(
             notifications: []
           }
         }));
+      },
+
+      // Combat System
+      resolveCombat: (attackerId: string, defenderId: string, location: string) => {
+        const state = get();
+        const attacker = state.empires[attackerId];
+        const defender = state.empires[defenderId];
+        
+        if (!attacker || !defender) {
+          // Return a default combat result if empires not found
+          return {
+            attacker: { empire: attackerId, fleetsLost: 0, shipsLost: 0, damage: 0 },
+            defender: { empire: defenderId, fleetsLost: 0, shipsLost: 0, damage: 0 },
+            winner: 'draw' as const,
+            planetCaptured: false,
+            experienceGained: {}
+          };
+        }
+        
+        // Simple combat resolution - can be expanded later
+        const attackPower = attacker.fleets.reduce((total, fleet) => total + fleet.ships.length * 10, 0);
+        const defensePower = defender.fleets.reduce((total, fleet) => total + fleet.ships.length * 10, 0);
+        
+        // Apply combat modifiers
+        const attackModifier = COMBAT_MODIFIERS.factionBonuses[attacker.faction]?.attack || 1.0;
+        const defenseModifier = COMBAT_MODIFIERS.factionBonuses[defender.faction]?.defense || 1.0;
+        
+        const finalAttackPower = attackPower * attackModifier;
+        const finalDefensePower = defensePower * defenseModifier * COMBAT_MODIFIERS.planetaryDefense;
+        
+        const result: CombatResult = {
+          attacker: {
+            empire: attackerId,
+            fleetsLost: 0,
+            shipsLost: 0,
+            damage: Math.max(0, finalDefensePower - finalAttackPower)
+          },
+          defender: {
+            empire: defenderId,
+            fleetsLost: 0,
+            shipsLost: 0,
+            damage: Math.max(0, finalAttackPower - finalDefensePower)
+          },
+          winner: finalAttackPower > finalDefensePower ? 'attacker' : 'defender',
+          planetCaptured: false,
+          experienceGained: {
+            [attackerId]: 10,
+            [defenderId]: 5
+          }
+        };
+        
+        // Update combat experience
+        set((state) => ({
+          ...state,
+          empires: {
+            ...state.empires,
+            [attackerId]: {
+              ...state.empires[attackerId],
+              combatExperience: state.empires[attackerId].combatExperience + result.experienceGained[attackerId],
+              totalWars: state.empires[attackerId].totalWars + (result.winner === 'attacker' ? 1 : 0)
+            },
+            [defenderId]: {
+              ...state.empires[defenderId],
+              combatExperience: state.empires[defenderId].combatExperience + result.experienceGained[defenderId]
+            }
+          }
+        }));
+        
+        return result;
+      },
+
+      // AI System
+      processAITurns: () => {
+        const state = get();
+        
+        Object.values(state.empires).forEach(empire => {
+          if (!empire.isPlayer) {
+            // AI decision making based on personality
+            const aiPersonality = empire.aiPersonality;
+            
+            // Research decisions
+            if (!empire.currentResearch && aiPersonality) {
+              const availableTechs = Object.keys(TECHNOLOGIES).filter(techId => 
+                !empire.technologies.has(techId) && 
+                TECHNOLOGIES[techId].prerequisites.every(prereq => empire.technologies.has(prereq))
+              );
+              
+              if (availableTechs.length > 0) {
+                let chosenTech: string;
+                
+                switch (aiPersonality) {
+                  case 'aggressive':
+                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'weapons') || availableTechs[0];
+                    break;
+                  case 'defensive':
+                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'shields') || availableTechs[0];
+                    break;
+                  case 'scientific':
+                    chosenTech = availableTechs.sort((a, b) => TECHNOLOGIES[b].cost - TECHNOLOGIES[a].cost)[0];
+                    break;
+                  case 'expansionist':
+                    chosenTech = availableTechs.find(id => TECHNOLOGIES[id].domain === 'propulsion') || availableTechs[0];
+                    break;
+                  default:
+                    chosenTech = availableTechs[Math.floor(Math.random() * availableTechs.length)];
+                }
+                
+                get().startResearch(empire.id, chosenTech);
+              }
+            }
+            
+            // Expansion decisions
+            if (aiPersonality === 'expansionist' || aiPersonality === 'aggressive') {
+              // Look for unclaimed planets to colonize
+              const systems = Object.values(state.galaxy.systems);
+              const uncolonizedPlanets = [];
+              
+              for (const system of systems) {
+                for (const planet of system.planets) {
+                  if (!planet.colony && planet.surveyedBy && planet.surveyedBy.length > 0) {
+                    uncolonizedPlanets.push(planet);
+                  }
+                }
+              }
+              
+              if (uncolonizedPlanets.length > 0) {
+                const targetPlanet = uncolonizedPlanets[Math.floor(Math.random() * uncolonizedPlanets.length)];
+                // AI would attempt to colonize this planet (simplified)
+                get().addNotification({
+                  type: 'info',
+                  title: 'AI Expansion',
+                  message: `${empire.name} is expanding to new worlds`
+                });
+              }
+            }
+          }
+        });
+      },
+
+      // Victory Conditions
+      checkVictoryConditions: () => {
+        const state = get();
+        const results: VictoryProgress[] = [];
+        
+        Object.values(state.empires).forEach(empire => {
+          Object.entries(VICTORY_CONDITIONS).forEach(([key, condition]) => {
+            const progress = condition.checkFunction(empire, state.galaxy);
+            const isCompleted = progress >= condition.threshold;
+            
+            results.push({
+              type: key as VictoryCondition,
+              progress: Math.min(progress, 1.0),
+              description: `${empire.name}: ${condition.description}`,
+              requirements: [`Reach ${Math.round(condition.threshold * 100)}% completion`],
+              completed: isCompleted
+            });
+            
+            // Check for victory
+            if (isCompleted && !state.isGameOver) {
+              get().endGame(empire.name, key as VictoryCondition);
+              get().addNotification({
+                type: 'success',
+                title: 'Victory Achieved!',
+                message: `${empire.name} has achieved ${condition.name}!`
+              });
+            }
+          });
+        });
+        
+        return results;
       }
     }),
     {
@@ -416,6 +612,23 @@ function generateGalaxy(settings: GameSettings): Galaxy {
   return galaxy;
 }
 
+// AI Helper Functions
+function getRandomAIPersonality(): AIPersonality {
+  const personalities: AIPersonality[] = ['aggressive', 'expansionist', 'defensive', 'diplomatic', 'economic', 'scientific'];
+  return personalities[Math.floor(Math.random() * personalities.length)];
+}
+
+function getAIName(personality: AIPersonality, faction: FactionType): string {
+  const template = AI_EMPIRE_TEMPLATES.find(t => t.personality === personality && t.faction === faction);
+  if (template) {
+    return template.name;
+  }
+  
+  // Fallback to random template
+  const randomTemplate = AI_EMPIRE_TEMPLATES[Math.floor(Math.random() * AI_EMPIRE_TEMPLATES.length)];
+  return randomTemplate.name;
+}
+
 function generateEmpires(settings: GameSettings): Record<string, Empire> {
   const empires: Record<string, Empire> = {};
   const factionTypes: FactionType[] = ['forge-union', 'oceanic-concord', 'verdant-kin', 'nomad-fleet', 'ashborn-syndicate'];
@@ -424,12 +637,14 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
     const empireId = `empire-${i}`;
     const isPlayer = i === 0; // First empire is player
     const factionType = factionTypes[i % factionTypes.length];
+    const aiPersonality = !isPlayer ? getRandomAIPersonality() : undefined;
     
     const empire: Empire = {
       id: empireId,
-      name: FACTION_BONUSES[factionType].name,
+      name: isPlayer ? FACTION_BONUSES[factionType].name : getAIName(aiPersonality!, factionType),
       color: generateEmpireColor(i),
       isPlayer,
+      aiPersonality,
       homeworld: '', // Will be set when placing homeworld
       faction: factionType,
       resources: {
@@ -457,7 +672,11 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
         domination: 0,
         federation: 0,
         techAscendancy: 0
-      }
+      },
+      combatExperience: 0,
+      totalWars: 0,
+      planetsConquered: 0,
+      techsDiscovered: 0
     };
     
     empires[empireId] = empire;

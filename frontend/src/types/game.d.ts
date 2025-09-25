@@ -109,6 +109,7 @@ export interface Empire {
   name: string;
   color: string;
   isPlayer: boolean;
+  aiPersonality?: AIPersonality;
   homeworld: string; // Planet ID
   faction: FactionType;
   resources: Record<ResourceType, number>;
@@ -120,6 +121,10 @@ export interface Empire {
   fleets: Fleet[];
   diplomaticStatus: Record<string, DiplomaticRelation>; // Empire ID -> Relation
   victoryProgress: Record<VictoryCondition, number>;
+  combatExperience: number;
+  totalWars: number;
+  planetsConquered: number;
+  techsDiscovered: number;
 }
 
 export interface Fleet {
@@ -187,6 +192,40 @@ export type FactionType =
   | 'verdant-kin' 
   | 'nomad-fleet' 
   | 'ashborn-syndicate';
+
+export type AIPersonality = 
+  | 'aggressive' 
+  | 'expansionist' 
+  | 'defensive' 
+  | 'diplomatic' 
+  | 'economic' 
+  | 'scientific';
+
+export interface CombatResult {
+  attacker: {
+    empire: string;
+    fleetsLost: number;
+    shipsLost: number;
+    damage: number;
+  };
+  defender: {
+    empire: string;
+    fleetsLost: number;
+    shipsLost: number;
+    damage: number;
+  };
+  winner: 'attacker' | 'defender' | 'draw';
+  planetCaptured?: boolean;
+  experienceGained: Record<string, number>;
+}
+
+export interface VictoryProgress {
+  type: VictoryCondition;
+  progress: number;
+  description: string;
+  requirements: string[];
+  completed: boolean;
+}
 
 export interface GameState {
   turn: number;
@@ -264,7 +303,10 @@ export type SidePanel =
   | 'colony-management' 
   | 'fleet-details' 
   | 'research-tree' 
-  | 'empire-overview';
+  | 'empire-overview'
+  | 'victory-conditions'
+  | 'diplomacy'
+  | 'combat-log';
 
 export interface Notification {
   id: string;

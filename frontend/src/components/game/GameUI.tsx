@@ -15,6 +15,9 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
+import VictoryPanel from './VictoryPanel';
+import DiplomacyPanel from './DiplomacyPanel';
+import CombatLog from './CombatLog';
 
 const RESOURCE_ICONS = {
   energy: Zap,
@@ -81,6 +84,43 @@ export const GameUI: React.FC = () => {
 
           {/* Right: Game Controls */}
           <div className="flex items-center space-x-2">
+            {/* Panel Access Buttons */}
+            <button 
+              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'victory-conditions' ? 'none' : 'victory-conditions')}
+              className={`p-2 rounded-lg ${
+                gameState.uiState.sidePanel === 'victory-conditions' 
+                  ? 'bg-gold-600 text-white' 
+                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
+              }`}
+              title="Victory Conditions"
+            >
+              🏆
+            </button>
+            
+            <button 
+              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'diplomacy' ? 'none' : 'diplomacy')}
+              className={`p-2 rounded-lg ${
+                gameState.uiState.sidePanel === 'diplomacy' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
+              }`}
+              title="Diplomacy"
+            >
+              🤝
+            </button>
+            
+            <button 
+              onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'combat-log' ? 'none' : 'combat-log')}
+              className={`p-2 rounded-lg ${
+                gameState.uiState.sidePanel === 'combat-log' 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
+              }`}
+              title="Combat Log"
+            >
+              ⚔️
+            </button>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -148,6 +188,9 @@ export const GameUI: React.FC = () => {
               {gameState.uiState.sidePanel === 'colony-management' && 'Colony Management'}
               {gameState.uiState.sidePanel === 'research-tree' && 'Research Tree'}
               {gameState.uiState.sidePanel === 'empire-overview' && 'Empire Overview'}
+              {gameState.uiState.sidePanel === 'victory-conditions' && 'Victory Conditions'}
+              {gameState.uiState.sidePanel === 'diplomacy' && 'Diplomacy'}
+              {gameState.uiState.sidePanel === 'combat-log' && 'Combat Log'}
             </h3>
             <button
               onClick={() => gameState.setSidePanel('none')}
@@ -163,6 +206,15 @@ export const GameUI: React.FC = () => {
             )}
             {gameState.uiState.sidePanel === 'empire-overview' && (
               <EmpireOverviewPanel />
+            )}
+            {gameState.uiState.sidePanel === 'victory-conditions' && (
+              <VictoryPanel />
+            )}
+            {gameState.uiState.sidePanel === 'diplomacy' && (
+              <DiplomacyPanel />
+            )}
+            {gameState.uiState.sidePanel === 'combat-log' && (
+              <CombatLog combatResults={[]} />
             )}
           </div>
         </motion.div>
