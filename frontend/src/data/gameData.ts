@@ -642,6 +642,52 @@ export const COMBAT_MODIFIERS = {
   }
 };
 
+// Basic Ship Design Templates
+export const DEFAULT_SHIP_DESIGNS = {
+  'scout': {
+    id: 'scout',
+    name: 'Scout',
+    hull: 'light',
+    components: [],
+    cost: { energy: 50, minerals: 75, food: 0, research: 0, alloys: 25, exoticMatter: 0 },
+    stats: {
+      health: 80,
+      attack: 15,
+      defense: 10,
+      speed: 9,
+      range: 3
+    }
+  },
+  'corvette': {
+    id: 'corvette',
+    name: 'Corvette',
+    hull: 'light',
+    components: [],
+    cost: { energy: 100, minerals: 150, food: 0, research: 0, alloys: 50, exoticMatter: 0 },
+    stats: {
+      health: 120,
+      attack: 25,
+      defense: 15,
+      speed: 7,
+      range: 2
+    }
+  },
+  'frigate': {
+    id: 'frigate',
+    name: 'Frigate',
+    hull: 'medium',
+    components: [],
+    cost: { energy: 200, minerals: 300, food: 0, research: 0, alloys: 100, exoticMatter: 0 },
+    stats: {
+      health: 200,
+      attack: 35,
+      defense: 25,
+      speed: 6,
+      range: 3
+    }
+  }
+} as const;
+
 // Victory Condition Thresholds
 export const VICTORY_CONDITIONS = {
   domination: {

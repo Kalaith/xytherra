@@ -18,7 +18,9 @@ import type {
   ResourceType,
   CombatResult,
   VictoryProgress,
-  AIPersonality
+  AIPersonality,
+  Ship,
+  ShipDesign
 } from '../types/game.d.ts';
 import { 
   TECHNOLOGIES, 
@@ -26,7 +28,8 @@ import {
   PLANET_TRAITS, 
   AI_EMPIRE_TEMPLATES, 
   COMBAT_MODIFIERS, 
-  VICTORY_CONDITIONS 
+  VICTORY_CONDITIONS,
+  DEFAULT_SHIP_DESIGNS
 } from '../data/gameData';
 
 interface GameStore extends GameState {
@@ -156,13 +159,85 @@ export const useGameStore = create<GameStore>()(
       },
 
       startGame: (settings) => {
-        set((state) => ({
-          ...state,
-          phase: 'playing',
-          gameSettings: settings,
-          galaxy: generateGalaxy(settings),
-          empires: generateEmpires(settings)
-        }));
+        set((state) => {
+          const galaxy = generateGalaxy(settings);
+          const empires = generateEmpires(settings);
+          
+          // Assign homeworlds and create starting fleets
+          const systemIds = Object.keys(galaxy.systems);
+          const availableSystems = [...systemIds];
+          
+          Object.values(empires).forEach((empire, index) => {
+            // Assign random homeworld system
+            const randomIndex = Math.floor(Math.random() * availableSystems.length);
+            const systemId = availableSystems.splice(randomIndex, 1)[0];
+            const system = galaxy.systems[systemId];
+            
+            if (system && system.planets.length > 0) {
+              // Find suitable homeworld planet based on faction
+              const factionHomeType = FACTION_BONUSES[empire.faction].homeworld;
+              let homeworld = system.planets.find(p => p.type === factionHomeType);
+              
+              // Fallback to any habitable planet
+              if (!homeworld) {
+                homeworld = system.planets.find(p => ['water', 'rocky', 'volcanic'].includes(p.type));
+              }
+              
+              // Final fallback to first planet
+              if (!homeworld) {
+                homeworld = system.planets[0];
+              }
+              
+              if (homeworld) {
+                empire.homeworld = homeworld.id;
+                
+                // Colonize the homeworld
+                homeworld.colonizedBy = empire.id;
+                homeworld.colony = {
+                  id: `colony-${homeworld.id}`,
+                  planetId: homeworld.id,
+                  empireId: empire.id,
+                  population: 2,
+                  buildings: [],
+                  resourceOutput: {
+                    energy: 3,
+                    minerals: 3,
+                    food: 2,
+                    research: 1,
+                    alloys: 0,
+                    exoticMatter: 0
+                  },
+                  established: 1,
+                  developmentLevel: 1
+                };
+                
+                empire.colonies.push(homeworld.id);
+                
+                // Create starting fleet
+                const startingFleet = createStartingFleet(empire.id, system);
+                empire.fleets.push(startingFleet);
+                
+                // Discover the home system
+                system.discoveredBy.push(empire.id);
+                
+                // Survey all planets in home system
+                system.planets.forEach(planet => {
+                  if (!planet.surveyedBy.includes(empire.id)) {
+                    planet.surveyedBy.push(empire.id);
+                  }
+                });
+              }
+            }
+          });
+          
+          return {
+            ...state,
+            phase: 'playing',
+            gameSettings: settings,
+            galaxy,
+            empires
+          };
+        });
       },
 
       endGame: (winner, victoryType) => {
@@ -640,6 +715,37 @@ function getAIName(personality: AIPersonality, faction: FactionType): string {
   // Fallback to random template
   const randomTemplate = AI_EMPIRE_TEMPLATES[Math.floor(Math.random() * AI_EMPIRE_TEMPLATES.length)];
   return randomTemplate.name;
+}
+
+// Ship Creation Functions
+function createShip(designId: keyof typeof DEFAULT_SHIP_DESIGNS): Ship {
+  const design = DEFAULT_SHIP_DESIGNS[designId];
+  return {
+    id: `ship-${Date.now()}-${Math.random()}`,
+    design: {
+      ...design,
+      components: []
+    } as ShipDesign,
+    health: design.stats.health,
+    experience: 0,
+    stats: { ...design.stats }
+  };
+}
+
+function createStartingFleet(empireId: string, homeSystem: StarSystem): Fleet {
+  const fleet: Fleet = {
+    id: `fleet-${empireId}-home`,
+    name: 'Home Fleet',
+    empireId,
+    ships: [
+      createShip('scout'),
+      createShip('corvette')
+    ],
+    coordinates: homeSystem.coordinates,
+    mission: 'defend',
+    movementPoints: 3
+  };
+  return fleet;
 }
 
 function generateEmpires(settings: GameSettings): Record<string, Empire> {

@@ -236,6 +236,16 @@ export const GameUI: React.FC = () => {
               Galaxy
             </button>
             <button
+              onClick={() => gameState.setCurrentView('colony')}
+              className={`px-3 py-2 rounded-lg ${
+                gameState.uiState.currentView === 'colony' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-slate-600 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              Colonies
+            </button>
+            <button
               onClick={() => gameState.setCurrentView('research')}
               className={`px-3 py-2 rounded-lg ${
                 gameState.uiState.currentView === 'research' 

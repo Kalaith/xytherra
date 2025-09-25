@@ -143,6 +143,7 @@ export interface Ship {
   design: ShipDesign;
   health: number;
   experience: number;
+  stats: ShipStats;
 }
 
 export interface ShipDesign {
