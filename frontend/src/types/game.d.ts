@@ -104,6 +104,32 @@ export interface Technology {
   requiredPlanetTypes?: PlanetType[]; // For hybrid techs
 }
 
+// Planet-Tech System interfaces
+export interface PlanetColonization {
+  planetId: string;
+  planetType: PlanetType;
+  turn: number;
+  order: number; // 1st, 2nd, 3rd colony, etc.
+  weight: number; // 3.0, 2.0, 1.5, etc.
+}
+
+export interface EmpireColonizationHistory {
+  order: PlanetColonization[];
+  weights: Record<TechDomain, number>;
+  currentSpecialization: TechDomain[];
+}
+
+export interface PlanetMastery {
+  planetId: string;
+  currentLevel: number; // 0-100
+  masteryPoints: number; // Accumulated over time
+  requiredInvestment: number; // Research points needed
+  masteryBonuses: Record<string, number>;
+  unlocked: boolean; // Has reached mastery
+}
+
+export type SpecializationLevel = 'weak' | 'moderate' | 'strong' | 'dominant';
+
 export interface Empire {
   id: string;
   name: string;
@@ -118,6 +144,11 @@ export interface Empire {
   researchProgress: Record<string, number>; // Tech ID -> Progress
   currentResearch?: string; // Technology ID
   colonies: string[]; // Planet IDs
+  // Planet-Tech System additions
+  colonizationHistory: EmpireColonizationHistory;
+  techDomainWeights: Record<TechDomain, number>;
+  specializationLevel: Record<TechDomain, SpecializationLevel>;
+  planetMasteries: Record<string, PlanetMastery>; // planetId -> mastery
   fleets: Fleet[];
   diplomaticStatus: Record<string, DiplomaticRelation>; // Empire ID -> Relation
   victoryProgress: Record<VictoryCondition, number>;
@@ -296,7 +327,8 @@ export type GameView =
   | 'research' 
   | 'diplomacy' 
   | 'fleets' 
-  | 'victory';
+  | 'victory'
+  | 'specialization';
 
 export type SidePanel = 
   | 'none' 

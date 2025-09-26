@@ -6,6 +6,7 @@ import { GameUI } from './components/game/GameUI';
 import ResearchView from './components/game/ResearchView';
 import DiplomacyView from './components/game/DiplomacyView';
 import ColonyView from './components/game/ColonyView';
+import SpecializationDashboard from './components/game/SpecializationDashboard';
 import './styles/globals.css';
 
 function App() {
@@ -22,6 +23,8 @@ function App() {
         return <DiplomacyView />;
       case 'colony':
         return <ColonyView />;
+      case 'specialization':
+        return <SpecializationDashboard className="absolute inset-0 overflow-y-auto" />;
       case 'fleets':
       case 'victory':
         return (

@@ -36,6 +36,7 @@ import { EmpireService } from '../services/empireService';
 import { GalaxyGenerationService } from '../services/galaxyService';
 import { AIService } from '../services/aiService';
 import { FleetService } from '../services/fleetService';
+import { PlanetTechService } from '../services/planetTechService';
 
 interface GameStore extends GameState {
   // Game Actions
@@ -289,10 +290,33 @@ export const useGameStore = create<GameStore>()(
       startResearch: (empireId, techId) => {
         set((state) => {
           const empire = state.empires[empireId];
-          if (empire) {
-            empire.currentResearch = techId;
-            empire.researchProgress[techId] = 0;
+          if (!empire) return state;
+
+          // NEW: Validate technology research eligibility using planet-tech system
+          const validationResult = validateTechResearch(empire, techId, state);
+          
+          if (!validationResult.canResearch) {
+            get().addNotification({
+              type: 'error',
+              title: 'Research Not Available',
+              message: validationResult.reason || 'Cannot research this technology'
+            });
+            return state;
           }
+
+          // Start the research
+          empire.currentResearch = techId;
+          empire.researchProgress[techId] = 0;
+          
+          const tech = TECHNOLOGIES[techId];
+          if (tech) {
+            get().addNotification({
+              type: 'info',
+              title: 'Research Started',
+              message: `Now researching ${tech.name}`
+            });
+          }
+          
           return state;
         });
       },
@@ -301,68 +325,238 @@ export const useGameStore = create<GameStore>()(
       colonizePlanet: (planetId, empireId) => {
         set((state) => {
           const empire = state.empires[empireId];
-          if (!empire) return state;
+          if (!empire) {
+            console.error('Empire not found:', empireId);
+            return state;
+          }
+          
+          console.log('Attempting to colonize planet:', planetId, 'by empire:', empireId);
           
           // Find the planet and add colony
-          Object.values(state.galaxy.systems).forEach(system => {
+          let planetFound = false;
+          let colonizationSuccessful = false;
+          let targetPlanet = null;
+          let targetSystem = null;
+          
+          // First, find the planet
+          for (const system of Object.values(state.galaxy.systems)) {
             const planet = system.planets.find(p => p.id === planetId);
-            if (planet && !planet.colonizedBy) {
-              // Check if empire can afford colonization
-              const cost = EmpireService.calculateColonizationCost(planet, empire);
-              const affordability = EmpireService.canAffordCost(empire, cost);
-              
-              if (!affordability.canAfford) {
-                get().addNotification({
-                  type: 'error',
-                  title: 'Colonization Failed',
-                  message: `Insufficient resources: ${affordability.missingResources.join(', ')}`
-                });
-                return;
+            if (planet) {
+              planetFound = true;
+              targetPlanet = planet;
+              targetSystem = system;
+              break;
+            }
+          }
+          
+          if (!planetFound) {
+            console.error('Planet not found:', planetId);
+            get().addNotification({
+              type: 'error',
+              title: 'Colonization Failed',
+              message: 'Planet not found.'
+            });
+            return state;
+          }
+          
+          console.log('Found planet:', targetPlanet!.name, 'colonized by:', targetPlanet!.colonizedBy);
+          
+          // Check if planet is surveyed first
+          if (!targetPlanet!.surveyedBy.includes(empireId)) {
+            console.log('Planet not surveyed by empire:', empireId);
+            get().addNotification({
+              type: 'warning',
+              title: 'Colonization Failed',
+              message: `${targetPlanet!.name} must be surveyed before colonization.`
+            });
+            return state;
+          }
+          
+          if (targetPlanet!.colonizedBy) {
+            console.log('Planet already colonized by:', targetPlanet!.colonizedBy);
+            get().addNotification({
+              type: 'warning',
+              title: 'Colonization Failed',
+              message: `${targetPlanet!.name} is already colonized.`
+            });
+            return state;
+          }
+          
+          try {
+            // Check if empire can afford colonization
+            const cost = EmpireService.calculateColonizationCost(targetPlanet!, empire);
+            console.log('Colonization cost:', cost);
+            
+            const affordability = EmpireService.canAffordCost(empire, cost);
+            console.log('Can afford:', affordability);
+            
+            if (!affordability.canAfford) {
+              get().addNotification({
+                type: 'error',
+                title: 'Colonization Failed',
+                message: `Insufficient resources: ${affordability.missingResources.join(', ')}`
+              });
+              return state;
+            }
+            
+            // Deduct resources
+            const updatedEmpire = EmpireService.deductResources(empire, cost);
+            state.empires[empireId] = updatedEmpire;
+            
+            // Set up basic colony
+            targetPlanet!.colonizedBy = empireId;
+            targetPlanet!.colony = {
+              id: `colony-${planetId}`,
+              planetId,
+              empireId,
+              population: GAME_CONSTANTS.EMPIRE.COLONY_POPULATION,
+              buildings: [],
+              resourceOutput: {
+                energy: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ENERGY,
+                minerals: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.MINERALS,
+                food: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.FOOD,
+                research: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.RESEARCH,
+                alloys: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ALLOYS,
+                exoticMatter: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.EXOTIC_MATTER
+              },
+              established: state.turn,
+              developmentLevel: 1
+            };
+            
+            // Add to empire's colonies list
+            updatedEmpire.colonies.push(planetId);
+            
+            console.log('Basic colony setup complete, starting planet-tech integration...');
+            
+            // NEW: Planet-Tech System Integration (simplified for debugging)
+            try {
+              // 1. Initialize colonization history if needed
+              if (!updatedEmpire.colonizationHistory) {
+                updatedEmpire.colonizationHistory = PlanetTechService.initializeColonizationHistory();
               }
               
-              // Deduct resources
-              const updatedEmpire = EmpireService.deductResources(empire, cost);
-              state.empires[empireId] = updatedEmpire;
+              // 2. Update colonization history and calculate new weights
+              const updatedHistory = PlanetTechService.updateColonizationHistory(
+                updatedEmpire, targetPlanet!, state.turn
+              );
+              updatedEmpire.colonizationHistory = updatedHistory;
+              console.log('Updated colonization history:', updatedHistory);
               
-              planet.colonizedBy = empireId;
-              planet.colony = {
-                id: `colony-${planetId}`,
-                planetId,
-                empireId,
-                population: GAME_CONSTANTS.EMPIRE.COLONY_POPULATION,
-                buildings: [],
-                resourceOutput: {
-                  energy: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ENERGY,
-                  minerals: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.MINERALS,
-                  food: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.FOOD,
-                  research: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.RESEARCH,
-                  alloys: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ALLOYS,
-                  exoticMatter: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.EXOTIC_MATTER
-                },
-                established: state.turn,
-                developmentLevel: 1
-              };
+              // 3. Update empire tech domain weights
+              updatedEmpire.techDomainWeights = updatedHistory.weights;
+              console.log('Updated tech domain weights:', updatedEmpire.techDomainWeights);
               
-              // Add to empire's colonies list
-              updatedEmpire.colonies.push(planetId);
+              // 4. Calculate specialization levels
+              updatedEmpire.specializationLevel = PlanetTechService.calculateSpecializationLevels(
+                updatedHistory.weights
+              );
+              console.log('Updated specialization levels:', updatedEmpire.specializationLevel);
+              
+              // 5. Initialize planet mastery tracking if needed
+              if (!updatedEmpire.planetMasteries) {
+                updatedEmpire.planetMasteries = {};
+              }
+              updatedEmpire.planetMasteries[planetId] = PlanetTechService.initializePlanetMastery(planetId);
+              
+              // 6. Unlock Tier 2 technologies through colonization
+              const colonyTechResult = PlanetTechService.unlockColonyTechnologies(targetPlanet!, empireId);
+              console.log('Colony tech result:', colonyTechResult);
+              
+              colonyTechResult.unlockedTechs.forEach(techId => {
+                updatedEmpire.technologies.add(techId);
+                updatedEmpire.techsDiscovered += 1;
+              });
+              
+              // Add notifications for unlocked technologies
+              colonyTechResult.notifications.forEach(message => {
+                get().addNotification({
+                  type: 'success',
+                  title: 'Technology Unlocked',
+                  message
+                });
+              });
               
               get().addNotification({
                 type: 'success',
                 title: 'Colony Established',
-                message: `Successfully colonized ${planet.name}!`
+                message: `Successfully colonized ${targetPlanet!.name}! ${colonyTechResult.unlockedTechs.length} technologies unlocked.`
+              });
+              
+              // 7. Generate empire identity update notification
+              try {
+                const identityDescription = PlanetTechService.getEmpireIdentityDescription(updatedEmpire);
+                get().addNotification({
+                  type: 'info',
+                  title: 'Empire Specialization Updated',
+                  message: `${updatedEmpire.name} specialization: ${identityDescription}`
+                });
+              } catch (identityError) {
+                console.error('Error generating empire identity:', identityError);
+              }
+            } catch (planetTechError) {
+              console.error('Error in planet-tech integration:', planetTechError);
+              get().addNotification({
+                type: 'warning',
+                title: 'Colony Established',
+                message: `Successfully colonized ${targetPlanet!.name}! (Some specialization features may be unavailable)`
               });
             }
-          });
+            
+            // Update planets conquered counter
+            updatedEmpire.planetsConquered += 1;
+            
+            colonizationSuccessful = true;
+            console.log('Colonization completed successfully');
+            
+          } catch (error) {
+            console.error('Error during colonization:', error);
+            get().addNotification({
+              type: 'error',
+              title: 'Colonization Error',
+              message: 'An error occurred while establishing the colony. Please try again.'
+            });
+          }
+          
           return state;
         });
       },
 
       surveyPlanet: (planetId, empireId) => {
         set((state) => {
+          const empire = state.empires[empireId];
+          if (!empire) return state;
+
           Object.values(state.galaxy.systems).forEach(system => {
             const planet = system.planets.find(p => p.id === planetId);
             if (planet && !planet.surveyedBy.includes(empireId)) {
+              // Add empire to surveyed list
               planet.surveyedBy.push(empireId);
+              
+              // NEW: Unlock Tier 1 technologies through survey
+              const surveyResult = PlanetTechService.unlockSurveyTechnologies(planet, empireId);
+              
+              // Add unlocked technologies to empire
+              surveyResult.unlockedTechs.forEach(techId => {
+                empire.technologies.add(techId);
+                empire.techsDiscovered += 1;
+              });
+              
+              // Add notifications for discoveries
+              surveyResult.notifications.forEach(message => {
+                get().addNotification({
+                  type: 'info',
+                  title: 'Technology Discovered',
+                  message
+                });
+              });
+              
+              if (surveyResult.unlockedTechs.length > 0) {
+                get().addNotification({
+                  type: 'success',
+                  title: 'Planetary Survey Complete',
+                  message: `Survey of ${planet.name} revealed ${surveyResult.unlockedTechs.length} new technologies!`
+                });
+              }
             }
           });
           return state;
@@ -630,6 +824,81 @@ export const useGameStore = create<GameStore>()(
   )
 );
 
+// Helper function to validate technology research
+function validateTechResearch(empire: Empire, techId: string, gameState: GameState): {
+  canResearch: boolean;
+  reason?: string;
+} {
+  const tech = TECHNOLOGIES[techId];
+  if (!tech) {
+    return { canResearch: false, reason: 'Technology not found' };
+  }
+
+  // Check if already researched
+  if (empire.technologies.has(techId)) {
+    return { canResearch: false, reason: 'Technology already researched' };
+  }
+
+  // Check prerequisites
+  const missingPrereqs = tech.prerequisites.filter(prereq => !empire.technologies.has(prereq));
+  if (missingPrereqs.length > 0) {
+    const prereqNames = missingPrereqs.map(id => TECHNOLOGIES[id]?.name || id).join(', ');
+    return { 
+      canResearch: false, 
+      reason: `Missing prerequisites: ${prereqNames}` 
+    };
+  }
+
+  // Check planet requirements for hybrid technologies
+  if (tech.isHybrid && tech.requiredPlanetTypes) {
+    const controlledPlanetTypes = new Set<string>();
+    
+    // Get planet types of all colonies
+    empire.colonies.forEach(colonyId => {
+      Object.values(gameState.galaxy.systems).forEach(system => {
+        const planet = system.planets.find(p => p.id === colonyId);
+        if (planet) {
+          controlledPlanetTypes.add(planet.type);
+        }
+      });
+    });
+
+    const missingPlanetTypes = tech.requiredPlanetTypes.filter(planetType => {
+      return !controlledPlanetTypes.has(planetType);
+    });
+
+    if (missingPlanetTypes.length > 0) {
+      return {
+        canResearch: false,
+        reason: `Requires colonies on: ${missingPlanetTypes.join(', ')} worlds`
+      };
+    }
+  }
+
+  // Check single planet requirement for regular technologies
+  if (!tech.isHybrid) {
+    const hasRequiredPlanetType = empire.colonies.some(colonyId => {
+      let found = false;
+      Object.values(gameState.galaxy.systems).forEach(system => {
+        const planet = system.planets.find(p => p.id === colonyId);
+        if (planet && planet.type === tech.requiredPlanetType) {
+          found = true;
+        }
+      });
+      return found;
+    });
+
+    if (!hasRequiredPlanetType) {
+      return {
+        canResearch: false,
+        reason: `Requires a colony on a ${tech.requiredPlanetType} world`
+      };
+    }
+  }
+
+  return { canResearch: true };
+}
+
 // Helper functions for game generation
 
 // AI Helper Functions
@@ -696,7 +965,12 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
       combatExperience: 0,
       totalWars: 0,
       planetsConquered: 0,
-      techsDiscovered: 0
+      techsDiscovered: 0,
+      // Planet-Tech System additions
+      colonizationHistory: PlanetTechService.initializeColonizationHistory(),
+      techDomainWeights: PlanetTechService.initializeTechDomainWeights(),
+      specializationLevel: PlanetTechService.initializeSpecializationLevels(),
+      planetMasteries: {}
     };
     
     empires[empireId] = empire;

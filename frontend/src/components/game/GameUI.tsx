@@ -220,6 +220,13 @@ export const GameUI: React.FC = () => {
               Colonies
             </Button>
             <Button
+              variant={gameState.uiState.currentView === 'specialization' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => gameState.setCurrentView('specialization')}
+            >
+              Specialization
+            </Button>
+            <Button
               variant={gameState.uiState.currentView === 'research' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => gameState.setCurrentView('research')}
@@ -331,7 +338,7 @@ const PlanetInfoPanel: React.FC = () => {
             </div>
           )}
 
-          {!isColonized && (
+          {!isColonized && isSurveyed && (
             <Button
               variant="success"
               onClick={() => gameState.colonizePlanet(selectedPlanet.id, playerEmpireId)}
@@ -339,6 +346,14 @@ const PlanetInfoPanel: React.FC = () => {
             >
               Colonize Planet
             </Button>
+          )}
+          
+          {!isColonized && !isSurveyed && (
+            <div className="text-center p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <p className="text-yellow-400 text-sm">
+                This planet must be surveyed before colonization.
+              </p>
+            </div>
           )}
         </div>
       ) : (
