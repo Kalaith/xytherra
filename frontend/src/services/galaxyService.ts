@@ -1,240 +1,285 @@
-import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType } from '../types/game.d.ts';
-import { GAME_CONSTANTS, getGalaxyDimensions, getSystemCount, generateRandomSeed, generateRandomPlanetCount, generateRandomPlanetSize } from '../constants/gameConstants';
-import { PLANET_TYPES, PLANET_TRAITS } from '../data/gameData';
+﻿import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType, PlanetTrait } from '../types/game.d.ts';
+import {
+  GAME_CONSTANTS,
+  getGalaxyDimensions,
+  getSystemCount,
+  generateRandomSeed,
+} from '../constants/gameConstants';
+import { PLANET_TRAITS } from '../data/gameData';
 import { addHyperlanesToGalaxy } from './hyperlaneService';
+import {
+  createRandomNumberGenerator,
+  generateRandomInteger,
+  selectRandomElement,
+} from '../utils/randomGeneration';
+import type { RandomNumberGenerator } from '../utils/randomGeneration';
 
 export class GalaxyGenerationService {
   /**
-   * Generate a complete galaxy based on settings
+   * Generate a complete galaxy based on settings, using a deterministic seed when provided.
    */
-  static generateGalaxy(settings: GameSettings): Galaxy {
-    const dimensions = getGalaxyDimensions(settings.galaxySize);
-    const systemCount = getSystemCount(settings.galaxySize);
-    const seed = generateRandomSeed();
-    
+  static generateGalaxy(settings: GameSettings, seed?: number): Galaxy {
+    return this.generateGalaxyWithDistribution(settings, seed);
+  }
+
+  /**
+   * Generate a galaxy with minimum-distance system placement for more even spreads.
+   */
+  static generateGalaxyWithDistribution(settings: GameSettings, seed?: number): Galaxy {
+    const baseSeed = seed ?? generateRandomSeed();
+    const randomNumberGenerator = createRandomNumberGenerator(baseSeed);
+
+    const galaxyDimension = getGalaxyDimensions(settings.galaxySize);
+    const starSystemCount = getSystemCount(settings.galaxySize);
+
     const galaxy: Galaxy = {
       size: settings.galaxySize,
       systems: {},
       hyperlanes: {},
-      width: dimensions,
-      height: dimensions,
-      seed
+      width: galaxyDimension,
+      height: galaxyDimension,
+      seed: baseSeed,
     };
 
-    // Generate star systems
-    for (let i = 0; i < systemCount; i++) {
-      const systemId = `system-${i}`;
-      const system = this.generateStarSystem(systemId, dimensions);
-      galaxy.systems[systemId] = system;
+    const generatedStarSystems: StarSystem[] = [];
+    const minimumSystemDistance = galaxyDimension * 0.08;
+    const maximumPlacementAttempts = starSystemCount * 20;
+    let placementAttempts = 0;
+
+    while (generatedStarSystems.length < starSystemCount && placementAttempts < maximumPlacementAttempts) {
+      const candidateCoordinates = {
+        x: randomNumberGenerator() * galaxyDimension,
+        y: randomNumberGenerator() * galaxyDimension,
+      };
+
+      if (
+        this.isValidSystemPlacement(candidateCoordinates, generatedStarSystems, minimumSystemDistance) ||
+        placementAttempts > maximumPlacementAttempts * 0.8
+      ) {
+        const systemId = `system-${generatedStarSystems.length}`;
+        const starSystem = this.generateStarSystem(systemId, candidateCoordinates, randomNumberGenerator);
+
+        generatedStarSystems.push(starSystem);
+        galaxy.systems[systemId] = starSystem;
+      }
+
+      placementAttempts += 1;
     }
 
-    // Generate hyperlanes between systems
-    const galaxyWithHyperlanes = addHyperlanesToGalaxy(galaxy);
-
-    return galaxyWithHyperlanes;
+    return addHyperlanesToGalaxy(galaxy);
   }
-  
-  /**
-   * Generate a single star system
-   */
-  private static generateStarSystem(systemId: string, dimensions: number): StarSystem {
-    const system: StarSystem = {
+
+  private static generateStarSystem(
+    systemId: string,
+    coordinates: { x: number; y: number },
+    randomNumberGenerator: RandomNumberGenerator,
+  ): StarSystem {
+    return {
       id: systemId,
-      name: this.generateSystemName(),
-      coordinates: {
-        x: Math.random() * dimensions,
-        y: Math.random() * dimensions
-      },
-      planets: this.generatePlanetsForSystem(systemId),
+      name: this.generateSystemName(randomNumberGenerator),
+      coordinates: { ...coordinates },
+      planets: this.generatePlanetsForSystem(systemId, randomNumberGenerator),
       discoveredBy: [],
-      hyperlanes: []
+      hyperlanes: [],
     };
+  }
 
-    return system;
-  }
-  
-  /**
-   * Generate planets for a star system
-   */
-  private static generatePlanetsForSystem(systemId: string): Planet[] {
-    const numPlanets = generateRandomPlanetCount();
-    const planets: Planet[] = [];
-    
-    for (let i = 0; i < numPlanets; i++) {
-      const planetId = `${systemId}-planet-${i}`;
-      const planet = this.generatePlanet(planetId, systemId, i);
-      planets.push(planet);
+  private static generatePlanetsForSystem(
+    systemId: string,
+    randomNumberGenerator: RandomNumberGenerator,
+  ): Planet[] {
+    const maximumPlanetsExclusive = GAME_CONSTANTS.PLANET.MAX_PER_SYSTEM + 1;
+    const planetCountInSystem = generateRandomInteger(
+      randomNumberGenerator,
+      maximumPlanetsExclusive,
+      GAME_CONSTANTS.PLANET.MIN_PER_SYSTEM,
+    );
+
+    const generatedPlanets: Planet[] = [];
+    for (let index = 0; index < planetCountInSystem; index += 1) {
+      generatedPlanets.push(
+        this.generatePlanet(`${systemId}-planet-${index}`, systemId, randomNumberGenerator),
+      );
     }
-    
-    return planets;
+    return generatedPlanets;
   }
-  
-  /**
-   * Generate a single planet
-   */
-  private static generatePlanet(planetId: string, systemId: string, orbitIndex: number): Planet {
-    const planetTypes = ['water', 'volcanic', 'rocky', 'gas', 'ice', 'living', 'desolate', 'exotic'] as const;
-    const weights = GAME_CONSTANTS.GALAXY_GENERATION.PLANET_TYPE_WEIGHTS;
-    
-    const planetType = this.weightedRandomChoice(planetTypes, weights);
-    
-    const planet: Planet = {
+
+  private static generatePlanet(
+    planetId: string,
+    systemId: string,
+    randomNumberGenerator: RandomNumberGenerator,
+  ): Planet {
+    const planetTypes: PlanetType[] = [
+      'water',
+      'volcanic',
+      'rocky',
+      'gas',
+      'ice',
+      'living',
+      'desolate',
+      'exotic',
+    ];
+
+    const planetType = this.weightedRandomChoice(
+      planetTypes,
+      GAME_CONSTANTS.GALAXY_GENERATION.PLANET_TYPE_WEIGHTS,
+      randomNumberGenerator,
+    );
+
+    return {
       id: planetId,
-      name: this.generatePlanetName(),
+      name: this.generatePlanetName(randomNumberGenerator),
       type: planetType,
-      coordinates: { x: 0, y: 0 }, // Relative to system center
-      size: generateRandomPlanetSize(),
-      traits: this.generatePlanetTraits(),
+      coordinates: { x: 0, y: 0 },
+      size: generateRandomInteger(
+        randomNumberGenerator,
+        GAME_CONSTANTS.PLANET.MAX_SIZE + 1,
+        GAME_CONSTANTS.PLANET.MIN_SIZE,
+      ),
+      traits: this.generatePlanetTraits(randomNumberGenerator),
       systemId,
-      surveyedBy: []
+      surveyedBy: [],
     };
-    
-    return planet;
   }
-  
-  /**
-   * Generate planet traits based on probability
-   */
-  private static generatePlanetTraits() {
+
+  private static generatePlanetTraits(randomNumberGenerator: RandomNumberGenerator): PlanetTrait[] {
     const availableTraits = Object.values(PLANET_TRAITS);
-    const traitChance = Math.random();
-    
-    if (traitChance > GAME_CONSTANTS.PLANET.TRAIT_CHANCES.NO_TRAITS) {
-      const numTraits = traitChance < GAME_CONSTANTS.PLANET.TRAIT_CHANCES.TWO_TRAITS ? 2 : 1;
-      const selectedTraits: typeof availableTraits = [];
-      
-      for (let i = 0; i < numTraits && selectedTraits.length < availableTraits.length; i++) {
-        const trait = availableTraits[Math.floor(Math.random() * availableTraits.length)];
-        if (!selectedTraits.includes(trait)) {
-          selectedTraits.push(trait);
-        }
-      }
-      
-      return selectedTraits;
+    if (availableTraits.length === 0) {
+      return [];
     }
-    
-    return [];
+
+    const traitRoll = randomNumberGenerator();
+    if (traitRoll <= GAME_CONSTANTS.PLANET.TRAIT_CHANCES.NO_TRAITS) {
+      return [];
+    }
+
+    const shouldGenerateTwoTraits = traitRoll >= GAME_CONSTANTS.PLANET.TRAIT_CHANCES.TWO_TRAITS;
+    const traitCount = shouldGenerateTwoTraits ? 2 : 1;
+
+    const selectedTraits: PlanetTrait[] = [];
+    while (selectedTraits.length < traitCount && selectedTraits.length < availableTraits.length) {
+      const candidateTrait = selectRandomElement(randomNumberGenerator, availableTraits);
+      if (!selectedTraits.includes(candidateTrait)) {
+        selectedTraits.push(candidateTrait);
+      }
+    }
+
+    return selectedTraits;
   }
-  
-  /**
-   * Weighted random selection utility
-   */
-  private static weightedRandomChoice<T>(items: readonly T[], weights: readonly number[]): T {
+
+  private static weightedRandomChoice<T>(
+    items: readonly T[],
+    weights: readonly number[],
+    randomNumberGenerator: RandomNumberGenerator,
+  ): T {
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-    let randomWeight = Math.random() * totalWeight;
-    
-    for (let i = 0; i < items.length; i++) {
-      randomWeight -= weights[i];
-      if (randomWeight <= 0) {
-        return items[i];
+    let selectionThreshold = randomNumberGenerator() * totalWeight;
+
+    for (let index = 0; index < items.length; index += 1) {
+      selectionThreshold -= weights[index];
+      if (selectionThreshold <= 0) {
+        return items[index];
       }
     }
-    
-    return items[items.length - 1]; // Fallback
+
+    return items[items.length - 1];
   }
-  
-  /**
-   * Generate system names
-   */
-  private static generateSystemName(): string {
+
+  private static generateSystemName(randomNumberGenerator: RandomNumberGenerator): string {
     const prefixes = [
-      'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Theta', 'Sigma',
-      'Tau', 'Omega', 'Lambda', 'Kappa', 'Phi', 'Chi', 'Psi', 'Rho'
-    ];
+      'Alpha',
+      'Beta',
+      'Gamma',
+      'Delta',
+      'Epsilon',
+      'Zeta',
+      'Theta',
+      'Sigma',
+      'Tau',
+      'Omega',
+      'Lambda',
+      'Kappa',
+      'Phi',
+      'Chi',
+      'Psi',
+      'Rho',
+    ] as const;
     const suffixes = [
-      'Centauri', 'Prime', 'Major', 'Minor', 'Nova', 'Nebula', 'Reach', 'Gate',
-      'Station', 'Expanse', 'Cluster', 'Junction', 'Haven', 'Drift', 'Core', 'Edge'
-    ];
-    
-    return `${this.randomChoice(prefixes)} ${this.randomChoice(suffixes)}`;
+      'Centauri',
+      'Prime',
+      'Major',
+      'Minor',
+      'Nova',
+      'Nebula',
+      'Reach',
+      'Gate',
+      'Station',
+      'Expanse',
+      'Cluster',
+      'Junction',
+      'Haven',
+      'Drift',
+      'Core',
+      'Edge',
+    ] as const;
+
+    return `${selectRandomElement(randomNumberGenerator, prefixes)} ${selectRandomElement(randomNumberGenerator, suffixes)}`;
   }
-  
-  /**
-   * Generate planet names
-   */
-  private static generatePlanetName(): string {
+
+  private static generatePlanetName(randomNumberGenerator: RandomNumberGenerator): string {
     const prefixes = [
-      'Neo', 'Prima', 'Alta', 'Nova', 'Terra', 'Magna', 'Ultima', 'Proxima',
-      'Stella', 'Luna', 'Vera', 'Vita', 'Petra', 'Aqua', 'Ignis', 'Glacies'
-    ];
+      'Neo',
+      'Prima',
+      'Alta',
+      'Nova',
+      'Terra',
+      'Magna',
+      'Ultima',
+      'Proxima',
+      'Stella',
+      'Luna',
+      'Vera',
+      'Vita',
+      'Petra',
+      'Aqua',
+      'Ignis',
+      'Glacies',
+    ] as const;
     const suffixes = [
-      'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
-      'Prime', 'Major', 'Minor', 'Beta', 'Gamma', 'Delta'
-    ];
-    
-    return `${this.randomChoice(prefixes)} ${this.randomChoice(suffixes)}`;
+      'I',
+      'II',
+      'III',
+      'IV',
+      'V',
+      'VI',
+      'VII',
+      'VIII',
+      'IX',
+      'X',
+      'Prime',
+      'Major',
+      'Minor',
+      'Beta',
+      'Gamma',
+      'Delta',
+    ] as const;
+
+    return `${selectRandomElement(randomNumberGenerator, prefixes)} ${selectRandomElement(randomNumberGenerator, suffixes)}`;
   }
-  
-  /**
-   * Random choice utility
-   */
-  private static randomChoice<T>(array: T[]): T {
-    return array[Math.floor(Math.random() * array.length)];
-  }
-  
+
   /**
    * Check if coordinates are too close to existing systems (for better distribution)
    */
   static isValidSystemPlacement(
-    newCoords: { x: number; y: number },
+    newCoordinates: { x: number; y: number },
     existingSystems: StarSystem[],
-    minDistance: number = 10
+    minimumDistance = 10,
   ): boolean {
-    return existingSystems.every(system => {
-      const dx = newCoords.x - system.coordinates.x;
-      const dy = newCoords.y - system.coordinates.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      return distance >= minDistance;
+    return existingSystems.every((system) => {
+      const deltaX = newCoordinates.x - system.coordinates.x;
+      const deltaY = newCoordinates.y - system.coordinates.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      return distance >= minimumDistance;
     });
-  }
-  
-  /**
-   * Generate galaxy with better system distribution
-   */
-  static generateGalaxyWithDistribution(settings: GameSettings): Galaxy {
-    const dimensions = getGalaxyDimensions(settings.galaxySize);
-    const systemCount = getSystemCount(settings.galaxySize);
-    const seed = generateRandomSeed();
-    const minSystemDistance = dimensions * 0.08; // 8% of galaxy size
-    
-    const galaxy: Galaxy = {
-      size: settings.galaxySize,
-      systems: {},
-      hyperlanes: {},
-      width: dimensions,
-      height: dimensions,
-      seed
-    };
-    
-    const systems: StarSystem[] = [];
-    let attempts = 0;
-    const maxAttempts = systemCount * 10;
-    
-    // Generate systems with minimum distance constraint
-    while (systems.length < systemCount && attempts < maxAttempts) {
-      const coords = {
-        x: Math.random() * dimensions,
-        y: Math.random() * dimensions
-      };
-      
-      if (this.isValidSystemPlacement(coords, systems, minSystemDistance) || attempts > maxAttempts * 0.8) {
-        const systemId = `system-${systems.length}`;
-        const system: StarSystem = {
-          id: systemId,
-          name: this.generateSystemName(),
-          coordinates: coords,
-          planets: this.generatePlanetsForSystem(systemId),
-          discoveredBy: [],
-          hyperlanes: []
-        };
-        
-        systems.push(system);
-        galaxy.systems[systemId] = system;
-      }
-      
-      attempts++;
-    }
-    
-    return galaxy;
   }
 }

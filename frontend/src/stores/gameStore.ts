@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { 
   GameState, 
@@ -32,6 +32,10 @@ import {
   DEFAULT_SHIP_DESIGNS
 } from '../data/gameData';
 import { GAME_CONSTANTS } from '../constants/gameConstants';
+
+import { UI_CONSTANTS } from '../constants/uiConstants';
+
+
 import { EmpireService } from '../services/empireService';
 import { GalaxyGenerationService } from '../services/galaxyService';
 import { AIService } from '../services/aiService';
