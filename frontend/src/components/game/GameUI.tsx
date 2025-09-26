@@ -1,9 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  SkipForward, 
+import {
+  SkipForward,
   Settings,
   Bell,
   X,
@@ -12,11 +10,16 @@ import {
   Wheat,
   Microscope,
   Wrench,
-  Sparkles
+  Sparkles,
+  Trophy,
+  Handshake,
+  Crosshair
 } from 'lucide-react';
+import type { SidePanel, GameView } from '../../types/game.d.ts';
 import { useGameStore } from '../../stores/gameStore';
 import { UI_CONSTANTS, getResourceColor, getNotificationColor } from '../../constants/uiConstants';
 import { Button } from '../ui/Button';
+import { ResizableSidebarLayout } from '../ui/ResizableSidebarLayout';
 import VictoryPanel from './VictoryPanel';
 import DiplomacyPanel from './DiplomacyPanel';
 import CombatLog from './CombatLog';
@@ -30,262 +33,239 @@ const RESOURCE_ICONS = {
   exoticMatter: Sparkles
 } as const;
 
+const SIDE_PANEL_TITLES: Record<Exclude<SidePanel, 'none'>, string> = {
+  'planet-info': 'Planet Information',
+  'colony-management': 'Colony Management',
+  'research-tree': 'Research Tree',
+  'empire-overview': 'Empire Overview',
+  'victory-conditions': 'Victory Conditions',
+  diplomacy: 'Diplomacy',
+  'combat-log': 'Combat Log',
+  'fleet-details': 'Fleet Details'
+};
+
+const PANEL_BUTTONS: Array<{
+  id: SidePanel;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'victory-conditions', label: 'Victory', icon: Trophy },
+  { id: 'diplomacy', label: 'Diplomacy', icon: Handshake },
+  { id: 'combat-log', label: 'Combat Log', icon: Crosshair }
+];
+
+const VIEW_BUTTONS: Array<{ id: GameView; label: string }> = [
+  { id: 'galaxy', label: 'Galaxy' },
+  { id: 'colony', label: 'Colonies' },
+  { id: 'specialization', label: 'Specialization' },
+  { id: 'research', label: 'Research' },
+  { id: 'diplomacy', label: 'Diplomacy' }
+];
+
 export const GameUI: React.FC = () => {
   const gameState = useGameStore();
   const playerEmpire = gameState.empires[gameState.playerEmpireId];
   const notifications = gameState.uiState.notifications;
-  
+  const sidePanel = gameState.uiState.sidePanel;
+  const isSidebarOpen = sidePanel !== 'none';
+
   if (!playerEmpire) {
     return null;
   }
 
+  const notificationsToShow = notifications.slice(-UI_CONSTANTS.LAYOUT.MAX_NOTIFICATIONS_DISPLAY);
+
+  const handlePanelToggle = (panel: SidePanel) => {
+    if (panel === 'none') return;
+    gameState.setSidePanel(sidePanel === panel ? 'none' : panel);
+  };
+
+  const renderSidePanelContent = () => {
+    switch (sidePanel) {
+      case 'planet-info':
+        return <PlanetInfoPanel />;
+      case 'empire-overview':
+        return <EmpireOverviewPanel />;
+      case 'victory-conditions':
+        return <VictoryPanel />;
+      case 'diplomacy':
+        return <DiplomacyPanel />;
+      case 'combat-log':
+        return <CombatLog combatResults={[]} />;
+      case 'colony-management':
+        return <div className="text-slate-400">Colony tools coming soon.</div>;
+      case 'research-tree':
+        return <div className="text-slate-400">Research tree coming soon.</div>;
+      default:
+        return <div className="text-slate-400">Select a panel to view details.</div>;
+    }
+  };
+
+  const renderResourceMeters = () => (
+    <div className="flex flex-wrap items-center gap-4">
+      {Object.entries(playerEmpire.resources).map(([resource, amount]) => {
+        const Icon = RESOURCE_ICONS[resource as keyof typeof RESOURCE_ICONS];
+        const color = getResourceColor(resource);
+        const income = playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
+
+        return (
+          <div key={resource} className="flex items-center gap-2">
+            <Icon className={`h-4 w-4 ${color}`} />
+            <div className="text-white">
+              <span className="font-semibold">{Math.floor(amount)}</span>
+              <span className="ml-1 text-xs text-slate-400">
+                ({income > 0 ? '+' : ''}{Math.floor(income)})
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
-    <>
-      {/* Top UI Bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-slate-700">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left: Empire Info */}
-          <div className="flex items-center space-x-4">
-            <div className="text-lg font-bold text-white">
-              {playerEmpire.name}
-            </div>
-            <div className="text-sm text-slate-400">
-              Turn {gameState.turn}
+    <div className="pointer-events-none fixed inset-0 z-40 flex h-full flex-col gap-4 px-4 pb-4 pt-4">
+      <header className="pointer-events-auto rounded-2xl border border-slate-800/60 bg-slate-900/85 px-6 py-4 shadow-lg shadow-slate-900/40 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="text-lg font-semibold text-white">{playerEmpire.name}</div>
+              <div className="text-sm text-slate-400">Turn {gameState.turn}</div>
             </div>
           </div>
-
-          {/* Center: Resources */}
-          <div className="flex items-center space-x-6">
-            {Object.entries(playerEmpire.resources).map(([resource, amount]) => {
-              const Icon = RESOURCE_ICONS[resource as keyof typeof RESOURCE_ICONS];
-              const color = getResourceColor(resource);
-              const income = playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
-              
-              return (
-                <div key={resource} className="flex items-center space-x-2">
-                  <Icon className={`w-4 h-4 ${color}`} />
-                  <div className="text-white">
-                    <span className="font-semibold">{Math.floor(amount)}</span>
-                    <span className="text-xs text-slate-400 ml-1">
-                      ({income > 0 ? '+' : ''}{Math.floor(income)})
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex flex-1 min-w-[240px] justify-center">
+            {renderResourceMeters()}
           </div>
-
-          {/* Right: Game Controls */}
-          <div className="flex items-center space-x-2">
-            {/* Panel Access Buttons */}
-            <div title="Victory Conditions">
+          <div className="flex items-center gap-2">
+            {PANEL_BUTTONS.map(({ id, label, icon: Icon }) => (
               <Button
-                variant={gameState.uiState.sidePanel === 'victory-conditions' ? 'primary' : 'secondary'}
+                key={id}
+                variant={sidePanel === id ? 'primary' : 'secondary'}
                 size="sm"
-                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'victory-conditions' ? 'none' : 'victory-conditions')}
+                onClick={() => handlePanelToggle(id)}
+                className="whitespace-nowrap"
               >
-                🏆
+                <Icon className="h-4 w-4" />
+                {label}
               </Button>
-            </div>
-            
-            <div title="Diplomacy">
-              <Button
-                variant={gameState.uiState.sidePanel === 'diplomacy' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'diplomacy' ? 'none' : 'diplomacy')}
-              >
-                🤝
-              </Button>
-            </div>
-            
-            <div title="Combat Log">
-              <Button
-                variant={gameState.uiState.sidePanel === 'combat-log' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => gameState.setSidePanel(gameState.uiState.sidePanel === 'combat-log' ? 'none' : 'combat-log')}
-              >
-                ⚔️
-              </Button>
-            </div>
-
+            ))}
             <Button
               variant="primary"
               onClick={() => gameState.nextTurn()}
+              className="whitespace-nowrap"
             >
-              <SkipForward className="w-4 h-4" />
+              <SkipForward className="h-4 w-4" />
               Next Turn
             </Button>
-            
-            <Button variant="secondary" size="sm">
-              <Settings className="w-4 h-4" />
+            <Button variant="secondary" size="sm" className="px-2">
+              <Settings className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Notifications */}
-      {notifications.length > 0 && (
-        <div className="fixed top-20 right-4 z-40 space-y-2 max-w-sm">
-          {notifications.slice(-UI_CONSTANTS.LAYOUT.MAX_NOTIFICATIONS_DISPLAY).map((notification) => (
-            <motion.div
-              key={notification.id}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 100 }}
-              className={`bg-slate-800/90 backdrop-blur-sm border rounded-lg p-4 ${getNotificationColor(notification.type)}`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <Bell className="w-4 h-4 text-blue-400" />
-                    <span className="font-semibold text-white">{notification.title}</span>
-                  </div>
-                  <p className="text-sm text-slate-300 mt-1">{notification.message}</p>
-                </div>
-                <button
-                  onClick={() => gameState.markNotificationRead(notification.id)}
-                  className="text-slate-400 hover:text-white ml-2"
+      <ResizableSidebarLayout
+        className="flex-1 pointer-events-none"
+        mainClassName="relative h-full pointer-events-none"
+        sidebarClassName="pointer-events-auto rounded-2xl shadow-xl shadow-slate-900/50"
+        storageKey="xytherra:ui:sidebar-width"
+        isSidebarOpen={isSidebarOpen}
+        sidebar={
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-3">
+              <h3 className="text-sm font-semibold text-white">
+                {sidePanel !== 'none' ? SIDE_PANEL_TITLES[sidePanel as Exclude<SidePanel, 'none'>] : 'Details'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => gameState.setSidePanel('none')}
+                className="text-slate-400 transition hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+              {renderSidePanelContent()}
+            </div>
+          </div>
+        }
+      >
+        <div className="relative flex h-full w-full">
+          {notificationsToShow.length > 0 && (
+            <div className="pointer-events-auto absolute right-4 top-0 z-10 w-80 max-w-full space-y-3">
+              {notificationsToShow.map((notification) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 100 }}
+                  className={`rounded-xl border ${getNotificationColor(notification.type)} bg-slate-900/85 p-4 shadow-lg shadow-slate-900/50 backdrop-blur`}
                 >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-blue-400" />
+                    <div className="flex-1">
+                      <div className="font-semibold text-white">{notification.title}</div>
+                      <p className="mt-1 text-sm text-slate-300">{notification.message}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => gameState.markNotificationRead(notification.id)}
+                      className="text-slate-400 transition hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </ResizableSidebarLayout>
 
-      {/* Side Panel */}
-      {gameState.uiState.sidePanel !== 'none' && (
-        <motion.div
-          initial={{ x: 400 }}
-          animate={{ x: 0 }}
-          exit={{ x: 400 }}
-          className="fixed top-20 right-4 bottom-4 w-80 bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-lg z-30"
-        >
-          <div className="flex items-center justify-between p-4 border-b border-slate-700">
-            <h3 className="font-semibold text-white">
-              {gameState.uiState.sidePanel === 'planet-info' && 'Planet Information'}
-              {gameState.uiState.sidePanel === 'colony-management' && 'Colony Management'}
-              {gameState.uiState.sidePanel === 'research-tree' && 'Research Tree'}
-              {gameState.uiState.sidePanel === 'empire-overview' && 'Empire Overview'}
-              {gameState.uiState.sidePanel === 'victory-conditions' && 'Victory Conditions'}
-              {gameState.uiState.sidePanel === 'diplomacy' && 'Diplomacy'}
-              {gameState.uiState.sidePanel === 'combat-log' && 'Combat Log'}
-            </h3>
-            <button
-              onClick={() => gameState.setSidePanel('none')}
-              className="text-slate-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="p-4 h-full overflow-y-auto">
-            {gameState.uiState.sidePanel === 'planet-info' && (
-              <PlanetInfoPanel />
-            )}
-            {gameState.uiState.sidePanel === 'empire-overview' && (
-              <EmpireOverviewPanel />
-            )}
-            {gameState.uiState.sidePanel === 'victory-conditions' && (
-              <VictoryPanel />
-            )}
-            {gameState.uiState.sidePanel === 'diplomacy' && (
-              <DiplomacyPanel />
-            )}
-            {gameState.uiState.sidePanel === 'combat-log' && (
-              <CombatLog combatResults={[]} />
-            )}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Bottom UI Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-800/90 backdrop-blur-sm border-t border-slate-700">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left: View Controls */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={gameState.uiState.currentView === 'galaxy' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => gameState.setCurrentView('galaxy')}
-            >
-              Galaxy
-            </Button>
-            <Button
-              variant={gameState.uiState.currentView === 'colony' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => gameState.setCurrentView('colony')}
-            >
-              Colonies
-            </Button>
-            <Button
-              variant={gameState.uiState.currentView === 'specialization' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => gameState.setCurrentView('specialization')}
-            >
-              Specialization
-            </Button>
-            <Button
-              variant={gameState.uiState.currentView === 'research' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => gameState.setCurrentView('research')}
-            >
-              Research
-            </Button>
-            <Button
-              variant={gameState.uiState.currentView === 'diplomacy' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => gameState.setCurrentView('diplomacy')}
-            >
-              Diplomacy
-            </Button>
+      <footer className="pointer-events-auto rounded-2xl border border-slate-800/60 bg-slate-900/85 px-6 py-4 shadow-lg shadow-slate-900/40 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {VIEW_BUTTONS.map((view) => (
+              <Button
+                key={view.id}
+                variant={gameState.uiState.currentView === view.id ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => gameState.setCurrentView(view.id)}
+              >
+                {view.label}
+              </Button>
+            ))}
           </div>
 
-          {/* Center: Current Research */}
           {playerEmpire.currentResearch && (
-            <div className="bg-slate-700/50 rounded-lg px-4 py-2">
-              <div className="text-sm text-slate-300">Researching:</div>
-              <div className="font-semibold text-blue-400">
-                {playerEmpire.researchProgress && playerEmpire.researchProgress[playerEmpire.currentResearch] !== undefined 
-                  ? `${Math.floor((playerEmpire.researchProgress[playerEmpire.currentResearch] / 100) * 100)}%`
-                  : '0%'
-                }
-              </div>
+            <div className="rounded-lg border border-slate-800/60 bg-slate-800/40 px-4 py-2 text-sm text-slate-200">
+              <div className="text-xs uppercase tracking-wide text-slate-400">Researching</div>
+              <div className="font-semibold text-blue-300">{playerEmpire.currentResearch}</div>
             </div>
           )}
 
-          {/* Right: Empire Stats */}
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="text-slate-400">
-              Colonies: <span className="text-white font-semibold">{playerEmpire.colonies.length}</span>
-            </div>
-            <div className="text-slate-400">
-              Fleets: <span className="text-white font-semibold">{playerEmpire.fleets.length}</span>
-            </div>
-            <div className="text-slate-400">
-              Technologies: <span className="text-white font-semibold">{playerEmpire.technologies.size}</span>
-            </div>
+          <div className="flex items-center gap-4 text-sm text-slate-300">
+            <div>Colonies: <span className="font-semibold text-white">{playerEmpire.colonies.length}</span></div>
+            <div>Fleets: <span className="font-semibold text-white">{playerEmpire.fleets.length}</span></div>
+            <div>Technologies: <span className="font-semibold text-white">{playerEmpire.technologies.size}</span></div>
           </div>
         </div>
-      </div>
-    </>
+      </footer>
+    </div>
   );
 };
 
-// Planet Info Panel Component
 const PlanetInfoPanel: React.FC = () => {
   const gameState = useGameStore();
   const selectedPlanetId = gameState.uiState.selectedPlanet;
-  
+
   if (!selectedPlanetId) {
     return <div className="text-slate-400">No planet selected</div>;
   }
 
-  // Find the planet
-  let selectedPlanet = null;
+  let selectedPlanet: any = null;
   for (const system of Object.values(gameState.galaxy.systems)) {
-    const planet = system.planets.find(p => p.id === selectedPlanetId);
+    const planet = system.planets.find((p) => p.id === selectedPlanetId);
     if (planet) {
       selectedPlanet = planet;
       break;
@@ -304,23 +284,23 @@ const PlanetInfoPanel: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="font-semibold text-lg text-white">{selectedPlanet.name}</h4>
-        <p className="text-slate-400 capitalize">{selectedPlanet.type} World</p>
+        <h4 className="text-lg font-semibold text-white">{selectedPlanet.name}</h4>
+        <p className="capitalize text-slate-400">{selectedPlanet.type} World</p>
       </div>
 
       {isSurveyed ? (
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-slate-400">Size</label>
+            <span className="text-sm text-slate-400">Size</span>
             <p className="text-white">{selectedPlanet.size}/5</p>
           </div>
 
           {selectedPlanet.traits.length > 0 && (
-            <div>
-              <label className="text-sm text-slate-400">Traits</label>
-              <div className="space-y-1">
-                {selectedPlanet.traits.map((trait, idx) => (
-                  <div key={idx} className="bg-slate-700/50 rounded p-2">
+            <div className="space-y-2">
+              <span className="text-sm text-slate-400">Traits</span>
+              <div className="space-y-2">
+                {selectedPlanet.traits.map((trait: any, idx: number) => (
+                  <div key={idx} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-3">
                     <div className="font-medium text-white">{trait.name}</div>
                     <div className="text-xs text-slate-400">{trait.description}</div>
                   </div>
@@ -331,29 +311,24 @@ const PlanetInfoPanel: React.FC = () => {
 
           {isColonized && (
             <div>
-              <label className="text-sm text-slate-400">Status</label>
-              <p className="text-green-400">
-                Colonized {isPlayerColony ? '(Your Colony)' : '(Enemy Colony)'}
-              </p>
+              <span className="text-sm text-slate-400">Status</span>
+              <p className="text-green-400">Colonized {isPlayerColony ? '(Your Colony)' : '(Enemy Colony)'}</p>
             </div>
           )}
 
-          {!isColonized && isSurveyed && (
+          {!isColonized && (
             <Button
-              variant="success"
-              onClick={() => gameState.colonizePlanet(selectedPlanet.id, playerEmpireId)}
+              variant={isSurveyed ? 'success' : 'secondary'}
+              onClick={() => {
+                if (isSurveyed) {
+                  gameState.colonizePlanet(selectedPlanet.id, playerEmpireId);
+                }
+              }}
               className="w-full"
+              disabled={!isSurveyed}
             >
-              Colonize Planet
+              {isSurveyed ? 'Colonize Planet' : 'Survey Required'}
             </Button>
-          )}
-          
-          {!isColonized && !isSurveyed && (
-            <div className="text-center p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <p className="text-yellow-400 text-sm">
-                This planet must be surveyed before colonization.
-              </p>
-            </div>
           )}
         </div>
       ) : (
@@ -372,11 +347,10 @@ const PlanetInfoPanel: React.FC = () => {
   );
 };
 
-// Empire Overview Panel Component
 const EmpireOverviewPanel: React.FC = () => {
   const gameState = useGameStore();
   const playerEmpire = gameState.empires[gameState.playerEmpireId];
-  
+
   if (!playerEmpire) {
     return <div className="text-slate-400">No empire data</div>;
   }
@@ -384,27 +358,27 @@ const EmpireOverviewPanel: React.FC = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="font-semibold text-lg text-white">{playerEmpire.name}</h4>
-        <p className="text-slate-400 capitalize">{playerEmpire.faction.replace('-', ' ')}</p>
+        <h4 className="text-lg font-semibold text-white">{playerEmpire.name}</h4>
+        <p className="capitalize text-slate-400">{playerEmpire.faction.replace('-', ' ')}</p>
       </div>
 
       <div>
-        <h5 className="font-medium text-white mb-2">Technologies</h5>
-        <div className="space-y-1 max-h-32 overflow-y-auto">
-          {Array.from(playerEmpire.technologies).map(techId => (
-            <div key={techId} className="bg-slate-700/50 rounded p-2">
-              <div className="text-sm text-white">{techId}</div>
+        <h5 className="mb-2 text-sm font-medium text-white">Technologies</h5>
+        <div className="max-h-32 space-y-2 overflow-y-auto">
+          {Array.from(playerEmpire.technologies).map((techId) => (
+            <div key={techId} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white">
+              {techId}
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h5 className="font-medium text-white mb-2">Colonies ({playerEmpire.colonies.length})</h5>
-        <div className="space-y-1 max-h-32 overflow-y-auto">
-          {playerEmpire.colonies.map(planetId => (
-            <div key={planetId} className="bg-slate-700/50 rounded p-2">
-              <div className="text-sm text-white">{planetId}</div>
+        <h5 className="mb-2 text-sm font-medium text-white">Colonies ({playerEmpire.colonies.length})</h5>
+        <div className="max-h-32 space-y-2 overflow-y-auto">
+          {playerEmpire.colonies.map((planetId) => (
+            <div key={planetId} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white">
+              {planetId}
             </div>
           ))}
         </div>
@@ -412,3 +386,4 @@ const EmpireOverviewPanel: React.FC = () => {
     </div>
   );
 };
+
