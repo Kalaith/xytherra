@@ -329,6 +329,7 @@ export interface UIState {
   currentView: GameView;
   sidePanel: SidePanel;
   notifications: Notification[];
+  combatLog: CombatResult[];
   tutorialStep?: number;
 }
 

@@ -68,6 +68,8 @@ export const GameUI: React.FC = () => {
   const notifications = gameState.uiState.notifications;
   const sidePanel = gameState.uiState.sidePanel;
   const isSidebarOpen = sidePanel !== 'none';
+  const combatLog = gameState.uiState.combatLog ?? [];
+  const combatLogCount = combatLog.length;
 
   if (!playerEmpire) {
     return null;
@@ -91,7 +93,12 @@ export const GameUI: React.FC = () => {
       case 'diplomacy':
         return <DiplomacyPanel />;
       case 'combat-log':
-        return <CombatLog combatResults={[]} />;
+        return (
+          <CombatLog
+            combatResults={combatLog}
+            onClearLog={combatLog.length ? gameState.clearCombatLog : undefined}
+          />
+        );
       case 'colony-management':
         return <div className="text-slate-400">Colony tools coming soon.</div>;
       case 'research-tree':
@@ -137,18 +144,27 @@ export const GameUI: React.FC = () => {
             {renderResourceMeters()}
           </div>
           <div className="flex items-center gap-2">
-            {PANEL_BUTTONS.map(({ id, label, icon: Icon }) => (
-              <Button
-                key={id}
-                variant={sidePanel === id ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => handlePanelToggle(id)}
-                className="whitespace-nowrap"
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Button>
-            ))}
+            {PANEL_BUTTONS.map(({ id, label, icon: Icon }) => {
+              const isActive = sidePanel === id;
+              const showBadge = id === 'combat-log' && combatLogCount > 0;
+              return (
+                <Button
+                  key={id}
+                  variant={isActive ? 'primary' : 'secondary'}
+                  size="sm"
+                  onClick={() => handlePanelToggle(id)}
+                  className="whitespace-nowrap flex items-center"
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                  {showBadge && (
+                    <span className="ml-2 rounded-full bg-red-500/80 px-2 text-xs font-semibold text-white">
+                      {combatLogCount > 9 ? '9+' : combatLogCount}
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
             <Button
               variant="primary"
               onClick={() => gameState.nextTurn()}
@@ -386,4 +402,6 @@ const EmpireOverviewPanel: React.FC = () => {
     </div>
   );
 };
+
+
 

@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { 
   GameState, 
@@ -43,6 +43,8 @@ import { FleetService } from '../services/fleetService';
 import { PlanetTechService } from '../services/planetTechService';
 import { ensureGalaxyHasHyperlanes } from '../services/hyperlaneService';
 
+const MAX_COMBAT_LOG_ENTRIES = 25;
+
 interface GameStore extends GameState {
   // Game Actions
   nextTurn: () => void;
@@ -85,6 +87,8 @@ interface GameStore extends GameState {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   markNotificationRead: (notificationId: string) => void;
   clearNotifications: () => void;
+  addCombatResult: (result: CombatResult) => void;
+  clearCombatLog: () => void;
 }
 
 // Initial game state
@@ -114,7 +118,8 @@ const createInitialGameState = (): GameState => ({
 const createInitialUIState = (): UIState => ({
   currentView: 'galaxy',
   sidePanel: 'none',
-  notifications: []
+  notifications: [],
+  combatLog: []
 });
 
 export const useGameStore = create<GameStore>()(
@@ -697,6 +702,30 @@ export const useGameStore = create<GameStore>()(
         }));
       },
 
+      addCombatResult: (result) => {
+        set((state) => {
+          const currentLog = state.uiState.combatLog ?? [];
+          const nextLog = [result, ...currentLog].slice(0, MAX_COMBAT_LOG_ENTRIES);
+          return {
+            ...state,
+            uiState: {
+              ...state.uiState,
+              combatLog: nextLog
+            }
+          };
+        });
+      },
+
+      clearCombatLog: () => {
+        set((state) => ({
+          ...state,
+          uiState: {
+            ...state.uiState,
+            combatLog: []
+          }
+        }));
+      },
+
       // Combat System
       resolveCombat: (attackerId: string, defenderId: string, location: string) => {
         const state = get();
@@ -1011,3 +1040,10 @@ function generateEmpireColor(index: number): string {
   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
   return colors[index % colors.length];
 }
+
+
+
+
+
+
+

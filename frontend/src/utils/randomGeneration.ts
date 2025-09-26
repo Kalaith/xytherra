@@ -1,4 +1,4 @@
-﻿export type RandomNumberGenerator = () => number;
+export type RandomNumberGenerator = () => number;
 
 /**
  * Mulberry32 pseudo-random number generator.
@@ -38,4 +38,27 @@ export const selectRandomElement = <T>(
   }
   const index = generateRandomInteger(randomNumberGenerator, list.length);
   return list[index];
+};
+
+export type StarFieldPoint = {
+  id: string;
+  left: number;
+  top: number;
+  size: number;
+  opacity: number;
+  delay: number;
+  duration: number;
+};
+
+export const generateStarField = (seed: number, count = 180): StarFieldPoint[] => {
+  const rng = createRandomNumberGenerator(seed);
+  return Array.from({ length: count }, (_, index) => ({
+    id: 'star-' + index,
+    left: Math.round(rng() * 1000) / 10,
+    top: Math.round(rng() * 1000) / 10,
+    size: rng() > 0.85 ? 2 : 1,
+    opacity: 0.35 + rng() * 0.45,
+    delay: rng() * 2,
+    duration: 2 + rng() * 3,
+  }));
 };

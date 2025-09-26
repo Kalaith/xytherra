@@ -18,6 +18,7 @@ import {
 import { useGameStore } from '../../stores/gameStore';
 import type { PlanetType, StarSystem, Planet, Hyperlane } from '../../types/game.d.ts';
 import { GAME_CONSTANTS } from '../../constants/gameConstants';
+import { generateStarField } from '../../utils/randomGeneration';
 
 const PLANET_ICONS = {
   water: Waves,
@@ -41,6 +42,8 @@ const PLANET_COLORS = {
   exotic: 'text-purple-300'
 } as const;
 
+
+const STAR_COUNT = 180;
 // System importance classification
 const getSystemImportance = (system: StarSystem): 'strategic' | 'resource-rich' | 'standard' => {
   const planetTypes = system.planets.map(p => p.type);
@@ -84,135 +87,88 @@ interface HyperlaneNetworkProps {
 }
 
 const HyperlaneNetwork: React.FC<HyperlaneNetworkProps> = ({ systems, hyperlanes, playerEmpireId }) => {
-  const galaxy = useGameStore((state) => state.galaxy);
-  
-  // Handle case where hyperlanes might be undefined/null
   if (!hyperlanes || Object.keys(hyperlanes).length === 0) {
-    console.log('No hyperlanes to render');
     return null;
   }
 
-  console.log(`=== HYPERLANE NETWORK DEBUG ===`);
-  console.log(`Rendering ${Object.keys(hyperlanes).length} hyperlanes`);
-  console.log(`Galaxy dimensions: ${galaxy.width} x ${galaxy.height}`);
-  console.log(`Using direct coordinate mapping (no transformation)`);
-  
-  // Track coordinate ranges for debugging
-  const allHyperlanes = Object.values(hyperlanes);
-  const allXCoords: number[] = [];
-  const allYCoords: number[] = [];
-  
-  allHyperlanes.forEach(hyperlane => {
-    const fromSystem = systems[hyperlane.fromSystemId];
-    const toSystem = systems[hyperlane.toSystemId];
-    if (fromSystem && toSystem) {
-      allXCoords.push(fromSystem.coordinates.x, toSystem.coordinates.x);
-      allYCoords.push(fromSystem.coordinates.y, toSystem.coordinates.y);
+  const getLineStyle = (condition: Hyperlane['condition']) => {
+    switch (condition) {
+      case 'open':
+        return {
+          stroke: '#60a5fa',
+          strokeWidth: 0.3,
+          strokeDasharray: 'none',
+          opacity: 0.8
+        };
+      case 'unstable':
+        return {
+          stroke: '#f59e0b',
+          strokeWidth: 0.3,
+          strokeDasharray: '2,2',
+          opacity: 0.6
+        };
+      case 'blocked':
+        return {
+          stroke: '#ef4444',
+          strokeWidth: 0.3,
+          strokeDasharray: '1,3',
+          opacity: 0.5
+        };
+      default:
+        return {
+          stroke: '#94a3b8',
+          strokeWidth: 0.3,
+          strokeDasharray: '1,2',
+          opacity: 0.4
+        };
     }
-  });
-  
-  const xRange = { min: Math.min(...allXCoords), max: Math.max(...allXCoords) };
-  const yRange = { min: Math.min(...allYCoords), max: Math.max(...allYCoords) };
-  
-  console.log(`Hyperlane coordinate ranges: X(${xRange.min.toFixed(1)} - ${xRange.max.toFixed(1)}), Y(${yRange.min.toFixed(1)} - ${yRange.max.toFixed(1)})`);
+  };
 
   return (
     <svg
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 1 }}
+      className="h-full w-full pointer-events-none"
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
-      width="100%"
-      height="100%"
     >
       {Object.values(hyperlanes).map((hyperlane) => {
         const fromSystem = systems[hyperlane.fromSystemId];
         const toSystem = systems[hyperlane.toSystemId];
 
         if (!fromSystem || !toSystem) {
-          console.log(`Missing system for hyperlane ${hyperlane.id}`);
           return null;
         }
 
-        // Only show hyperlanes if at least one system is discovered
         const fromDiscovered = fromSystem.discoveredBy.includes(playerEmpireId);
         const toDiscovered = toSystem.discoveredBy.includes(playerEmpireId);
 
-        if (!fromDiscovered && !toDiscovered) return null;
+        if (!fromDiscovered && !toDiscovered) {
+          return null;
+        }
 
-        // Use coordinates directly - no transformation
         const fromX = fromSystem.coordinates.x;
         const fromY = fromSystem.coordinates.y;
         const toX = toSystem.coordinates.x;
         const toY = toSystem.coordinates.y;
 
-        console.log(`Hyperlane ${hyperlane.id}:`);
-        console.log(`  From: ${fromSystem.name} at (${fromX}, ${fromY})`);
-        console.log(`  To: ${toSystem.name} at (${toX}, ${toY})`);
-
-        // Line styling based on hyperlane condition
-        const getLineStyle = (condition: Hyperlane['condition']) => {
-          switch (condition) {
-            case 'open':
-              return {
-                stroke: '#60a5fa', // blue-400
-                strokeWidth: 0.3,
-                strokeDasharray: 'none',
-                opacity: 0.8
-              };
-            case 'unstable':
-              return {
-                stroke: '#f59e0b', // amber-500
-                strokeWidth: 0.3,
-                strokeDasharray: '2,2',
-                opacity: 0.6
-              };
-            case 'blocked':
-              return {
-                stroke: '#ef4444', // red-500
-                strokeWidth: 0.3,
-                strokeDasharray: '1,3',
-                opacity: 0.5
-              };
-          }
-        };
-
         const lineStyle = getLineStyle(hyperlane.condition);
 
         return (
-          <>
-            <motion.line
-              key={hyperlane.id}
-              x1={fromX}
-              y1={fromY}
-              x2={toX}
-              y2={toY}
-              {...lineStyle}
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: lineStyle.opacity }}
-              transition={{ duration: 0.8, delay: Math.random() * 0.5 }}
-            />
-            
-            {/* Debug: Visual markers for key systems - only show a few to avoid clutter */}
-            {(fromSystem.name.includes('Alpha') || fromSystem.name.includes('Beta') || toSystem.name.includes('Alpha') || toSystem.name.includes('Beta')) && (
-              <>
-                <circle cx={fromX} cy={fromY} r="1.5" fill="red" opacity="0.8" />
-                <circle cx={toX} cy={toY} r="1.5" fill="blue" opacity="0.8" />
-                <text x={fromX + 2} y={fromY - 2} fill="white" fontSize="2.5" opacity="0.9">
-                  {fromSystem.name.slice(0, 3)}({fromX.toFixed(0)},{fromY.toFixed(0)})
-                </text>
-                <text x={toX + 2} y={toY + 2} fill="white" fontSize="2.5" opacity="0.9">
-                  {toSystem.name.slice(0, 3)}({toX.toFixed(0)},{toY.toFixed(0)})
-                </text>
-              </>
-            )}
-          </>
+          <motion.line
+            key={hyperlane.id}
+            x1={fromX}
+            y1={fromY}
+            x2={toX}
+            y2={toY}
+            {...lineStyle}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: lineStyle.opacity }}
+            transition={{ duration: 0.8, delay: Math.random() * 0.5 }}
+          />
         );
       })}
     </svg>
   );
 };
-
 // System Node for Galaxy View - Clean single node per system
 interface SystemNodeProps {
   system: StarSystem;
@@ -224,39 +180,33 @@ const SystemNode: React.FC<SystemNodeProps> = ({ system, onSystemClick }) => {
   const empires = useGameStore((state) => state.empires);
 
   const isDiscovered = system.discoveredBy.includes(playerEmpireId);
-  const controllingEmpire = Object.values(empires).find(empire =>
-    empire.colonies.some(colonyId =>
-      system.planets.some(planet => planet.id === colonyId)
+  const controllingEmpire = Object.values(empires).find((empire) =>
+    empire.colonies.some((colonyId) =>
+      system.planets.some((planet) => planet.id === colonyId)
     )
   );
   const isControlled = controllingEmpire?.id === playerEmpireId;
   const importance = getSystemImportance(system);
 
-  // Use coordinates directly as percentages - same as hyperlanes
   const positionX = system.coordinates.x;
   const positionY = system.coordinates.y;
 
-  console.log(`System ${system.name}: positioned at (${positionX}%, ${positionY}%), discovered: ${isDiscovered}`);
-
-  // Enhanced debug for key systems
-  if (system.name.includes('Alpha') || system.name.includes('Beta')) {
-    console.log(`🔍 KEY SYSTEM: ${system.name} -> CSS position: left: ${positionX}%, top: ${positionY}%`);
-  }
+  const baseStyles = {
+    left: `${positionX}%`,
+    top: `${positionY}%`,
+    transform: 'translate(-50%, -50%)',
+  } as const;
 
   if (!isDiscovered) {
     return (
       <motion.div
         whileHover={{ scale: 1.1 }}
         className="absolute cursor-pointer"
-        style={{
-          left: `${positionX}%`,
-          top: `${positionY}%`,
-          transform: 'translate(-50%, -50%)'
-        }}
+        style={baseStyles}
         onClick={() => onSystemClick(system)}
       >
         <Star className="w-3 h-3 text-slate-500 opacity-60" />
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-xs text-slate-500 whitespace-nowrap">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-slate-500">
           Unexplored
         </div>
       </motion.div>
@@ -267,56 +217,39 @@ const SystemNode: React.FC<SystemNodeProps> = ({ system, onSystemClick }) => {
     <motion.div
       whileHover={{ scale: 1.2 }}
       className="absolute cursor-pointer group"
-      style={{
-        left: `${positionX}%`,
-        top: `${positionY}%`,
-        transform: 'translate(-50%, -50%)'
-      }}
+      style={baseStyles}
       onClick={() => onSystemClick(system)}
     >
-      {/* Empire territory background */}
       {controllingEmpire && (
         <div
-          className="absolute inset-0 rounded-full opacity-20 scale-150"
+          className="absolute inset-0 scale-150 rounded-full opacity-20"
           style={{ backgroundColor: controllingEmpire.color }}
         />
       )}
 
-      {/* System star */}
       <Star className={`${getSystemSize(importance)} ${getSystemColor(importance, isControlled)}`} />
 
-      {/* Empire control indicator */}
       {controllingEmpire && (
         <div
-          className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
+          className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-white"
           style={{ backgroundColor: controllingEmpire.color }}
         />
       )}
 
-      {/* System name and info */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap">
-        <div className="text-xs text-slate-300 font-medium">{system.name}</div>
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+        <div className="text-xs font-medium text-slate-300">{system.name}</div>
         <div className="text-xs text-slate-500">
           {system.planets.length} planet{system.planets.length !== 1 ? 's' : ''}
           {importance !== 'standard' && (
-            <span className="ml-1 text-purple-400">★</span>
+            <span className="ml-1 text-purple-300 font-semibold">*</span>
           )}
         </div>
-        
-        {/* Debug coordinate display for key systems */}
-        {(system.name.includes('Alpha') || system.name.includes('Beta')) && (
-          <div className="text-xs text-yellow-400 bg-black bg-opacity-50 rounded px-1 mt-1">
-            ({positionX.toFixed(0)},{positionY.toFixed(0)})
-          </div>
-        )}
       </div>
 
-      {/* Hover tooltip */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100
-                      transition-opacity bg-slate-800 rounded px-2 py-1 text-xs whitespace-nowrap z-10">
-        <div className="text-slate-200 font-medium">{system.name}</div>
-        <div className="text-slate-400">
-          {system.planets.length} planets • {importance}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 bg-slate-800/90">
+        <div className="font-medium text-slate-200">{system.name}</div>
+        <div>
+          {system.planets.length} planets - {importance}
         </div>
         {controllingEmpire && (
           <div className="text-blue-400">Controlled by {controllingEmpire.name}</div>
@@ -395,6 +328,12 @@ interface SystemDetailViewProps {
 }
 
 const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onPlanetClick }) => {
+  const galaxy = useGameStore((state) => state.galaxy);
+  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
+  const detailStarField = useMemo(
+    () => generateStarField(galaxy.seed + system.id.length, 120),
+    [galaxy.seed, system.id]
+  );
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -403,23 +342,30 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
       className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 z-50"
     >
       {/* Background stars */}
-      <div className="absolute inset-0">
-        {[...Array(100)].map((_, i) => (
+      <div className="pointer-events-none absolute inset-0 z-0">
+        {detailStarField.map((star) => (
           <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full opacity-40"
+            key={star.id}
+            className="absolute rounded-full bg-white"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: star.size,
+              height: star.size,
+              opacity: star.opacity,
             }}
-            animate={{ opacity: [0.2, 0.6, 0.2] }}
-            transition={{
-              duration: 3 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-            }}
+            animate={{ opacity: [0.2, star.opacity, 0.2] }}
+            transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
           />
         ))}
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <HyperlaneNetwork
+          systems={galaxy.systems}
+          hyperlanes={galaxy.hyperlanes}
+          playerEmpireId={playerEmpireId}
+        />
       </div>
 
       {/* Back button */}
@@ -508,40 +454,13 @@ export default function GalaxyView() {
   const setSidePanel = useGameStore((state) => state.setSidePanel);
   const addNotification = useGameStore((state) => state.addNotification);
   const surveyPlanet = useGameStore((state) => state.surveyPlanet);
-  const generateHyperlanes = useGameStore((state) => state.generateHyperlanes); // Add this
+  const generateHyperlanes = useGameStore((state) => state.generateHyperlanes);
 
+  const starField = useMemo(
+    () => generateStarField(galaxy.seed, STAR_COUNT),
+    [galaxy.seed]
+  );
   const systems = useMemo(() => Object.values(galaxy.systems), [galaxy.systems]);
-
-  // Debug logging for hyperlanes
-  console.log('=== GALAXY DEBUG INFO ===');
-  console.log('Window dimensions:', { width: window.innerWidth, height: window.innerHeight });
-  console.log('Container aspect ratio:', window.innerWidth / window.innerHeight);
-  console.log('Galaxy data:', {
-    systemCount: systems.length,
-    hyperlaneCount: Object.keys(galaxy.hyperlanes || {}).length,
-    galaxyDimensions: { width: galaxy.width, height: galaxy.height },
-    galaxyAspectRatio: galaxy.width / galaxy.height
-  });
-  console.log('Sample systems with coordinates:', systems.slice(0, 5).map(s => ({ 
-    name: s.name, 
-    rawCoords: s.coordinates,
-    hyperlaneConnections: s.hyperlanes?.length || 0,
-    discovered: s.discoveredBy.includes(playerEmpireId)
-  })));
-  
-  // Check coordinate ranges to make sure they're reasonable
-  const coordRanges = systems.reduce((ranges, system) => {
-    return {
-      minX: Math.min(ranges.minX, system.coordinates.x),
-      maxX: Math.max(ranges.maxX, system.coordinates.x),
-      minY: Math.min(ranges.minY, system.coordinates.y),
-      maxY: Math.max(ranges.maxY, system.coordinates.y)
-    };
-  }, { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-  
-  console.log('Coordinate ranges:', coordRanges);
-  console.log('Expected ranges: X[0-100], Y[0-100]');
-  console.log('========================');
 
   // Statistics for galaxy overview
   const discoveredSystems = useMemo(() =>
@@ -608,38 +527,37 @@ export default function GalaxyView() {
 
   // Main galaxy view with system nodes
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
+    <div className="fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
       {/* Background stars */}
-      <div className="absolute inset-0">
-        {[...Array(200)].map((_, i) => (
+      <div className="pointer-events-none absolute inset-0 z-0">
+        {starField.map((star) => (
           <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full opacity-60"
+            key={star.id}
+            className="absolute rounded-full bg-white"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: star.size,
+              height: star.size,
+              opacity: star.opacity,
             }}
-            animate={{
-              opacity: [0.3, 0.8, 0.3],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
+            animate={{ opacity: [0.2, star.opacity, 0.2] }}
+            transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
           />
         ))}
       </div>
 
-      {/* Hyperlane network - connection lines between systems */}
-      <HyperlaneNetwork
-        systems={galaxy.systems}
-        hyperlanes={galaxy.hyperlanes}
-        playerEmpireId={playerEmpireId}
-      />
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <HyperlaneNetwork
+          systems={galaxy.systems}
+          hyperlanes={galaxy.hyperlanes}
+          playerEmpireId={playerEmpireId}
+        />
+      </div>
+
 
       {/* Galaxy content */}
-      <div className="relative w-full h-full" style={{ zIndex: 2 }}>
+      <div className="relative z-20 h-full w-full">
         {/* System nodes */}
         {systems.map((system) => (
           <SystemNode
@@ -661,7 +579,7 @@ export default function GalaxyView() {
           </div>
           
           {/* Debug button for hyperlane generation */}
-          {Object.keys(galaxy.hyperlanes || {}).length === 0 && (
+          {import.meta.env.DEV && Object.keys(galaxy.hyperlanes || {}).length === 0 && (
             <button
               onClick={generateHyperlanes}
               className="mt-3 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
@@ -713,7 +631,7 @@ export default function GalaxyView() {
               <span className="text-xs text-slate-300">Your Territory</span>
             </div>
             <div className="text-xs text-slate-400 mt-2">
-              Click systems to explore • Click planets to survey/colonize
+              Click systems to explore; click planets to survey or colonize.
             </div>
           </div>
         </div>
