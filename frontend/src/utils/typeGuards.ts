@@ -156,6 +156,42 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
     technologies: new Set(['basic-manufacturing']),
     researchProgress: {},
     colonies: ['test-planet'],
+    // Planet-Tech System fields
+    colonizationHistory: {
+      order: [],
+      weights: {
+        shields: 0,
+        weapons: 0,
+        industry: 0,
+        propulsion: 0,
+        sensors: 0,
+        biotech: 0,
+        survival: 0,
+        experimental: 0
+      },
+      currentSpecialization: []
+    },
+    techDomainWeights: {
+      shields: 0,
+      weapons: 0,
+      industry: 0,
+      propulsion: 0,
+      sensors: 0,
+      biotech: 0,
+      survival: 0,
+      experimental: 0
+    },
+    specializationLevel: {
+      shields: 'weak',
+      weapons: 'weak',
+      industry: 'weak',
+      propulsion: 'weak',
+      sensors: 'weak',
+      biotech: 'weak',
+      survival: 'weak',
+      experimental: 'weak'
+    },
+    planetMasteries: {},
     fleets: [],
     diplomaticStatus: {},
     victoryProgress: {
@@ -200,9 +236,11 @@ export const createMockGameState = (overrides: Partial<GameState> = {}): GameSta
           name: 'Test System',
           coordinates: { x: 50, y: 50 },
           planets: [planet],
-          discoveredBy: [empire.id]
+          discoveredBy: [empire.id],
+          hyperlanes: []
         }
       },
+      hyperlanes: {},
       width: 100,
       height: 100,
       seed: 12345

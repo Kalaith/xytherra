@@ -37,6 +37,7 @@ import { GalaxyGenerationService } from '../services/galaxyService';
 import { AIService } from '../services/aiService';
 import { FleetService } from '../services/fleetService';
 import { PlanetTechService } from '../services/planetTechService';
+import { ensureGalaxyHasHyperlanes } from '../services/hyperlaneService';
 
 interface GameStore extends GameState {
   // Game Actions
@@ -44,6 +45,9 @@ interface GameStore extends GameState {
   startGame: (settings: GameSettings) => void;
   endGame: (winner?: string, victoryType?: VictoryCondition) => void;
   resetGame: () => void;
+  
+  // Galaxy Actions
+  generateHyperlanes: () => void; // New function to generate hyperlanes for existing saves
   
   // Empire Actions
   setPlayerEmpire: (empireId: string) => void;
@@ -86,6 +90,7 @@ const createInitialGameState = (): GameState => ({
   galaxy: {
     size: 'medium',
     systems: {},
+    hyperlanes: {},
     width: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
     height: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
     seed: Math.floor(Math.random() * GAME_CONSTANTS.GALAXY.SEED_MAX)
@@ -252,6 +257,22 @@ export const useGameStore = create<GameStore>()(
           ...createInitialGameState(),
           uiState: createInitialUIState()
         }));
+      },
+
+      // Galaxy Actions  
+      generateHyperlanes: () => {
+        set((state) => {
+          const updatedGalaxy = ensureGalaxyHasHyperlanes(state.galaxy);
+          get().addNotification({
+            type: 'info',
+            title: 'Hyperlanes Generated',
+            message: `Generated ${Object.keys(updatedGalaxy.hyperlanes).length} hyperlane connections between star systems.`
+          });
+          return {
+            ...state,
+            galaxy: updatedGalaxy
+          };
+        });
       },
 
       // Empire Actions
@@ -818,6 +839,9 @@ export const useGameStore = create<GameStore>()(
               empire.technologies = new Set();
             }
           });
+          
+          // Ensure galaxy has hyperlanes - fix for existing saves without hyperlanes
+          state.galaxy = ensureGalaxyHasHyperlanes(state.galaxy);
         }
       }
     }

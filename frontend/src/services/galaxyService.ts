@@ -1,6 +1,7 @@
 import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType } from '../types/game.d.ts';
 import { GAME_CONSTANTS, getGalaxyDimensions, getSystemCount, generateRandomSeed, generateRandomPlanetCount, generateRandomPlanetSize } from '../constants/gameConstants';
 import { PLANET_TYPES, PLANET_TRAITS } from '../data/gameData';
+import { addHyperlanesToGalaxy } from './hyperlaneService';
 
 export class GalaxyGenerationService {
   /**
@@ -14,19 +15,23 @@ export class GalaxyGenerationService {
     const galaxy: Galaxy = {
       size: settings.galaxySize,
       systems: {},
+      hyperlanes: {},
       width: dimensions,
       height: dimensions,
       seed
     };
-    
+
     // Generate star systems
     for (let i = 0; i < systemCount; i++) {
       const systemId = `system-${i}`;
       const system = this.generateStarSystem(systemId, dimensions);
       galaxy.systems[systemId] = system;
     }
-    
-    return galaxy;
+
+    // Generate hyperlanes between systems
+    const galaxyWithHyperlanes = addHyperlanesToGalaxy(galaxy);
+
+    return galaxyWithHyperlanes;
   }
   
   /**
@@ -41,9 +46,10 @@ export class GalaxyGenerationService {
         y: Math.random() * dimensions
       },
       planets: this.generatePlanetsForSystem(systemId),
-      discoveredBy: []
+      discoveredBy: [],
+      hyperlanes: []
     };
-    
+
     return system;
   }
   
@@ -194,6 +200,7 @@ export class GalaxyGenerationService {
     const galaxy: Galaxy = {
       size: settings.galaxySize,
       systems: {},
+      hyperlanes: {},
       width: dimensions,
       height: dimensions,
       seed
@@ -217,7 +224,8 @@ export class GalaxyGenerationService {
           name: this.generateSystemName(),
           coordinates: coords,
           planets: this.generatePlanetsForSystem(systemId),
-          discoveredBy: []
+          discoveredBy: [],
+          hyperlanes: []
         };
         
         systems.push(system);

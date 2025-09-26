@@ -65,6 +65,16 @@ export interface StarSystem {
   planets: Planet[];
   controlledBy?: string; // Empire ID
   discoveredBy: string[]; // Empire IDs that have discovered this system
+  hyperlanes: string[]; // IDs of connected systems
+}
+
+export interface Hyperlane {
+  id: string;
+  fromSystemId: string;
+  toSystemId: string;
+  distance: number;
+  travelTime: number;
+  condition: 'open' | 'unstable' | 'blocked';
 }
 
 export interface Colony {
@@ -275,6 +285,7 @@ export interface GameState {
 export interface Galaxy {
   size: 'small' | 'medium' | 'large';
   systems: Record<string, StarSystem>;
+  hyperlanes: Record<string, Hyperlane>;
   width: number;
   height: number;
   seed: number;
