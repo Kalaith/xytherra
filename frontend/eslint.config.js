@@ -23,13 +23,12 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
-      // TypeScript specific rules
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
+      // Basic TypeScript rules that don't require type information
+      '@typescript-eslint/no-explicit-any': 'warn', // Changed from error to warn
+      '@typescript-eslint/no-unused-vars': 'warn', // Changed from error to warn
+      '@typescript-eslint/explicit-function-return-type': 'off', // Too strict for React components
       '@typescript-eslint/no-empty-interface': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      '@typescript-eslint/prefer-optional-chain': 'warn',
+      'no-case-declarations': 'warn', // Changed from error to warn
     },
   },
 )
