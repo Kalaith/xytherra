@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
@@ -830,13 +829,15 @@ export const useGameStore = create<GameStore>()(
           Object.entries(victoryConditions).forEach(([key, condition]) => {
             let progress: number;
             if (key === 'technology') {
-              progress = (
-                condition as (typeof victoryConditions)['technology']
-              ).checkFunction(empire, { TECHNOLOGIES });
+              progress = (condition as (typeof victoryConditions)['technology']).checkFunction(
+                empire,
+                { TECHNOLOGIES }
+              );
             } else if (key === 'diplomatic') {
-              progress = (
-                condition as (typeof victoryConditions)['diplomatic']
-              ).checkFunction(empire, state.empires);
+              progress = (condition as (typeof victoryConditions)['diplomatic']).checkFunction(
+                empire,
+                state.empires
+              );
             } else {
               progress = (
                 condition as

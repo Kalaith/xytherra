@@ -1,9 +1,4 @@
-import type {
-  Empire,
-  GameState,
-  AIPersonality,
-  Notification,
-} from '../types/game.d.ts';
+import type { Empire, GameState, AIPersonality, Notification } from '../types/game.d.ts';
 import { gameConstants } from '../constants/gameConstants';
 import { TECHNOLOGIES } from '../data/gameData';
 
@@ -244,9 +239,7 @@ export class AIService {
       startResearch: (empireId: string, techId: string) => void;
       colonizePlanet: (planetId: string, empireId: string) => void;
       createFleet: (empireId: string, systemId: string) => string;
-      addNotification: (
-        notification: Omit<Notification, 'id' | 'timestamp' | 'read'>
-      ) => void;
+      addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
     }
   ): void {
     decisions.forEach(decision => {
