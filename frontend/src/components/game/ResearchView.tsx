@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '../../stores/gameStore';
 import { TECHNOLOGIES } from '../../data/gameData';
-import type { Technology, TechDomain } from '../../types/game.d.ts';
+import type { TechDomain } from '../../types/game.d.ts';
 
 const ResearchView: React.FC = () => {
   const gameState = useGameStore();

@@ -20,9 +20,9 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
   const connections = new Set<string>(); // Track connections to avoid duplicates
 
   // Configuration - Adjusted for the actual coordinate system
-  const MAX_CONNECTION_DISTANCE = 30; // Maximum distance for direct connections (increased)
-  const MIN_CONNECTIONS_PER_SYSTEM = 2; // Minimum connections per system
-  const MAX_CONNECTIONS_PER_SYSTEM = 4; // Maximum connections per system
+  const maxConnectionDistance = 30; // Maximum distance for direct connections (increased)
+  const minConnectionsPerSystem = 2; // Minimum connections per system
+  const maxConnectionsPerSystem = 4; // Maximum connections per system
 
   console.log(`Generating hyperlanes for ${systemList.length} systems...`);
 
@@ -35,13 +35,13 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
         system: other,
         distance: calculateDistance(system.coordinates, other.coordinates)
       }))
-      .filter(({ distance }) => distance <= MAX_CONNECTION_DISTANCE)
+      .filter(({ distance }) => distance <= maxConnectionDistance)
       .sort((a, b) => a.distance - b.distance);
 
     // Connect to closest systems up to the maximum
     let connectionsAdded = 0;
     for (const { system: targetSystem, distance } of nearbySystemsWithDistance) {
-      if (connectionsAdded >= MAX_CONNECTIONS_PER_SYSTEM) break;
+      if (connectionsAdded >= maxConnectionsPerSystem) break;
 
       const hyperlaneId = generateHyperlaneId(system.id, targetSystem.id);
 
@@ -78,7 +78,7 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
 
   // Step 2: Ensure minimum connectivity (connect isolated systems)
   systemList.forEach(system => {
-    if (!system.hyperlanes || system.hyperlanes.length < MIN_CONNECTIONS_PER_SYSTEM) {
+    if (!system.hyperlanes || system.hyperlanes.length < minConnectionsPerSystem) {
       // Find the closest systems that we're not already connected to
       const unconnectedSystems = systemList
         .filter(other =>
@@ -91,7 +91,7 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
         }))
         .sort((a, b) => a.distance - b.distance);
 
-      const connectionsNeeded = MIN_CONNECTIONS_PER_SYSTEM - (system.hyperlanes?.length || 0);
+      const connectionsNeeded = minConnectionsPerSystem - (system.hyperlanes?.length || 0);
 
       for (let i = 0; i < Math.min(connectionsNeeded, unconnectedSystems.length); i++) {
         const { system: targetSystem, distance } = unconnectedSystems[i];

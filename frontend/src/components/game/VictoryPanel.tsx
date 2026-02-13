@@ -1,7 +1,6 @@
 import React from 'react';
 import { Trophy, Target, Crown, DollarSign } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
-import type { VictoryProgress } from '../../types/game.d.ts';
 
 const VictoryPanel: React.FC = () => {
   const checkVictoryConditions = useGameStore((state) => state.checkVictoryConditions);

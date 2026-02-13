@@ -9,15 +9,12 @@ import {
   Microscope, 
   Wrench, 
   Sparkles,
-  Plus,
-  Minus,
   TrendingUp,
-  AlertCircle,
   Factory
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
-import { UI_CONSTANTS, getResourceColor } from '../../constants/uiConstants';
-import { GAME_CONSTANTS } from '../../constants/gameConstants';
+import { getResourceColor } from '../../constants/uiConstants';
+import { gameConstants } from '../../constants/gameConstants';
 import { Button } from '../ui/Button';
 import type { Colony, Building as BuildingType, Planet } from '../../types/game.d.ts';
 
@@ -75,22 +72,22 @@ const ColonyView: React.FC = () => {
   };
 
   const getPopulationGrowth = (colony: Colony) => {
-    const growthRate = Math.max(0, colony.resourceOutput.food - colony.population * GAME_CONSTANTS.COLONY.FOOD_CONSUMPTION_PER_POP);
+    const growthRate = Math.max(0, colony.resourceOutput.food - colony.population * gameConstants.COLONY.FOOD_CONSUMPTION_PER_POP);
     return Math.round(growthRate * 100) / 100;
   };
 
   const getColonyHappiness = (colony: Colony, planet: Planet) => {
-    let happiness = GAME_CONSTANTS.COLONY.BASE_HAPPINESS;
+    let happiness = gameConstants.COLONY.BASE_HAPPINESS;
     
     // Population density effect
-    if (colony.population > planet.size * GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_THRESHOLD) {
-      happiness -= GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_PENALTY;
+    if (colony.population > planet.size * gameConstants.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_THRESHOLD) {
+      happiness -= gameConstants.COLONY.HAPPINESS_EFFECTS.OVERCROWDING_PENALTY;
     } else if (colony.population < planet.size) {
-      happiness += GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.UNDERPOPULATED_BONUS;
+      happiness += gameConstants.COLONY.HAPPINESS_EFFECTS.UNDERPOPULATED_BONUS;
     }
     
     // Development level effect
-    happiness += colony.developmentLevel * GAME_CONSTANTS.COLONY.HAPPINESS_EFFECTS.DEVELOPMENT_BONUS_PER_LEVEL;
+    happiness += colony.developmentLevel * gameConstants.COLONY.HAPPINESS_EFFECTS.DEVELOPMENT_BONUS_PER_LEVEL;
     
     // Building effects
     colony.buildings.forEach(building => {
@@ -226,8 +223,6 @@ const ColonyView: React.FC = () => {
 const ColonyDetailPanel: React.FC<{ colony: Colony; planet: Planet; system: string }> = ({ 
   colony, planet, system 
 }) => {
-  const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
-
   const availableBuildings: BuildingType[] = [
     {
       id: 'power-plant',

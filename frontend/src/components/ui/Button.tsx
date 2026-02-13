@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { UI_CONSTANTS } from '../../constants/uiConstants';
+import { uiConstants } from '../../constants/uiConstants';
 
 interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
@@ -24,11 +24,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseClasses = 'font-semibold rounded-lg transition-colors duration-150 flex items-center justify-center gap-2';
   
   const variantClasses = {
-    primary: UI_CONSTANTS.COLORS.BUTTONS.PRIMARY,
-    secondary: UI_CONSTANTS.COLORS.BUTTONS.SECONDARY,
-    success: UI_CONSTANTS.COLORS.BUTTONS.SUCCESS,
-    warning: UI_CONSTANTS.COLORS.BUTTONS.WARNING,
-    danger: UI_CONSTANTS.COLORS.BUTTONS.DANGER
+    primary: uiConstants.COLORS.BUTTONS.PRIMARY,
+    secondary: uiConstants.COLORS.BUTTONS.SECONDARY,
+    success: uiConstants.COLORS.BUTTONS.SUCCESS,
+    warning: uiConstants.COLORS.BUTTONS.WARNING,
+    danger: uiConstants.COLORS.BUTTONS.DANGER
   };
   
   const sizeClasses = {

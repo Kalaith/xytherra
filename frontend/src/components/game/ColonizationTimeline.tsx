@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import type { Empire, PlanetType, TechDomain } from '../../types/game.d.ts';
+import type { Empire, PlanetType } from '../../types/game.d.ts';
 
 interface ColonizationTimelineProps {
   empire: Empire;

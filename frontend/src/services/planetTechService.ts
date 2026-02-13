@@ -4,16 +4,15 @@ import type {
   Planet, 
   PlanetType, 
   TechDomain, 
-  Technology,
   EmpireColonizationHistory,
   PlanetColonization,
   PlanetMastery,
   SpecializationLevel
 } from '../types/game.d.ts';
-import { TECHNOLOGIES, PLANET_TYPES } from '../data/gameData';
+import { TECHNOLOGIES, planetTypes } from '../data/gameData';
 
 // Colonization weight constants
-export const COLONIZATION_WEIGHTS: Record<number, number> = {
+export const colonizationWeights: Record<number, number> = {
   1: 3.0,  // First colony - huge impact
   2: 2.0,  // Second colony - major impact
   3: 1.5,  // Third colony - significant impact
@@ -22,7 +21,7 @@ export const COLONIZATION_WEIGHTS: Record<number, number> = {
 };
 
 // Specialization thresholds
-export const SPECIALIZATION_THRESHOLDS = {
+export const specializationThresholds = {
   weak: 0,
   moderate: 2,
   strong: 4,
@@ -85,7 +84,7 @@ export class PlanetTechService {
   /**
    * Unlock technologies when surveying a planet (Tier 1)
    */
-  static unlockSurveyTechnologies(planet: Planet, empireId: string): {
+  static unlockSurveyTechnologies(planet: Planet, _empireId: string): {
     unlockedTechs: string[];
     notifications: string[];
   } {
@@ -108,7 +107,7 @@ export class PlanetTechService {
   /**
    * Unlock technologies when colonizing a planet (Tier 2)
    */
-  static unlockColonyTechnologies(planet: Planet, empireId: string): {
+  static unlockColonyTechnologies(planet: Planet, _empireId: string): {
     unlockedTechs: string[];
     notifications: string[];
   } {
@@ -167,7 +166,7 @@ export class PlanetTechService {
     turn: number
   ): EmpireColonizationHistory {
     const order = empire.colonizationHistory.order.length + 1;
-    const weight = COLONIZATION_WEIGHTS[order] || 1.0;
+    const weight = colonizationWeights[order] || 1.0;
 
     const newColonization: PlanetColonization = {
       planetId: planet.id,
@@ -202,7 +201,7 @@ export class PlanetTechService {
     };
 
     colonizations.forEach(colonization => {
-      const planetInfo = PLANET_TYPES[colonization.planetType];
+      const planetInfo = planetTypes[colonization.planetType];
       if (planetInfo) {
         weights[planetInfo.domain] += colonization.weight;
       }
@@ -225,11 +224,11 @@ export class PlanetTechService {
     const levels: Record<TechDomain, SpecializationLevel> = {} as Record<TechDomain, SpecializationLevel>;
 
     Object.entries(weights).forEach(([domain, weight]) => {
-      if (weight >= SPECIALIZATION_THRESHOLDS.dominant) {
+      if (weight >= specializationThresholds.dominant) {
         levels[domain as TechDomain] = 'dominant';
-      } else if (weight >= SPECIALIZATION_THRESHOLDS.strong) {
+      } else if (weight >= specializationThresholds.strong) {
         levels[domain as TechDomain] = 'strong';
-      } else if (weight >= SPECIALIZATION_THRESHOLDS.moderate) {
+      } else if (weight >= specializationThresholds.moderate) {
         levels[domain as TechDomain] = 'moderate';
       } else {
         levels[domain as TechDomain] = 'weak';
@@ -279,8 +278,8 @@ export class PlanetTechService {
 
     // Check planet requirements for hybrid technologies
     if (tech.isHybrid && tech.requiredPlanetTypes) {
-      const missingPlanetTypes = tech.requiredPlanetTypes.filter(planetType => {
-        return !empire.colonies.some(colonyId => {
+      const missingPlanetTypes = tech.requiredPlanetTypes.filter(_planetType => {
+        return !empire.colonies.some(_colonyId => {
           // This would need to be resolved by checking the actual planet type of the colony
           // For now, we'll implement this check in the game store where we have access to the galaxy
           return false; // Placeholder

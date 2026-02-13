@@ -1,6 +1,6 @@
-import type { Fleet, Ship, ShipDesign, StarSystem, Empire, Coordinates } from '../types/game.d.ts';
-import { GAME_CONSTANTS } from '../constants/gameConstants';
-import { DEFAULT_SHIP_DESIGNS } from '../data/gameData';
+import type { Fleet, Ship, ShipDesign, StarSystem, Coordinates } from '../types/game.d.ts';
+import { gameConstants } from '../constants/gameConstants';
+import { defaultShipDesigns } from '../data/gameData';
 
 export class FleetService {
   /**
@@ -16,7 +16,7 @@ export class FleetService {
       ships: [],
       coordinates: system.coordinates,
       mission: 'idle',
-      movementPoints: GAME_CONSTANTS.FLEET.STARTING_MOVEMENT_POINTS
+      movementPoints: gameConstants.FLEET.STARTING_MOVEMENT_POINTS
     };
     
     return fleet;
@@ -42,8 +42,8 @@ export class FleetService {
   /**
    * Create a ship from a design template
    */
-  static createShip(designId: keyof typeof DEFAULT_SHIP_DESIGNS): Ship {
-    const design = DEFAULT_SHIP_DESIGNS[designId];
+  static createShip(designId: keyof typeof defaultShipDesigns): Ship {
+    const design = defaultShipDesigns[designId];
     const shipId = this.generateShipId();
     
     return {
@@ -101,7 +101,7 @@ export class FleetService {
    * Get experience bonus multiplier for ships
    */
   private static getExperienceBonus(experience: number): number {
-    const levels = GAME_CONSTANTS.COMBAT.FLEET_EXPERIENCE_LEVELS;
+    const levels = gameConstants.COMBAT.FLEET_EXPERIENCE_LEVELS;
     
     if (experience >= levels.LEGENDARY.MIN) return levels.LEGENDARY.BONUS;
     if (experience >= levels.ELITE.MIN) return levels.ELITE.BONUS;
@@ -168,7 +168,7 @@ export class FleetService {
    */
   static resetMovementPoints(fleet: Fleet): Fleet {
     const updatedFleet = { ...fleet };
-    updatedFleet.movementPoints = GAME_CONSTANTS.FLEET.STARTING_MOVEMENT_POINTS;
+    updatedFleet.movementPoints = gameConstants.FLEET.STARTING_MOVEMENT_POINTS;
     return updatedFleet;
   }
   
@@ -235,13 +235,13 @@ export class FleetService {
    * Generate unique fleet ID
    */
   private static generateFleetId(empireId: string): string {
-    return `${GAME_CONSTANTS.FLEET.FLEET_ID_PREFIX}${empireId}-${Date.now()}`;
+    return `${gameConstants.FLEET.FLEET_ID_PREFIX}${empireId}-${Date.now()}`;
   }
   
   /**
    * Generate unique ship ID
    */
   private static generateShipId(): string {
-    return `${GAME_CONSTANTS.FLEET.SHIP_ID_PREFIX}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `${gameConstants.FLEET.SHIP_ID_PREFIX}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }

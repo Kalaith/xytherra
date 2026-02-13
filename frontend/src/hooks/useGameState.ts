@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import type { Empire, Planet, ResourceType } from '../types/game.d.ts';
+import type { ResourceType } from '../types/game.d.ts';
 import type { PartialResourceMap, EmpireId, PlanetId } from '../types/gameTypes';
 
 export const usePlayerEmpire = () => {

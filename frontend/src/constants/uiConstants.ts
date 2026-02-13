@@ -1,5 +1,5 @@
 // Design system constants for consistent UI
-export const UI_CONSTANTS = {
+export const uiConstants = {
   DIMENSIONS: {
     SIDEBAR_WIDTH: 'w-80', // 20rem
     NOTIFICATION_MAX_WIDTH: 'max-w-sm',
@@ -94,12 +94,12 @@ export const UI_CONSTANTS = {
 // Type-safe color utilities
 export const getResourceColor = (resource: string): string => {
   const colorMap: Record<string, string> = {
-    energy: UI_CONSTANTS.COLORS.RESOURCES.ENERGY,
-    minerals: UI_CONSTANTS.COLORS.RESOURCES.MINERALS,
-    food: UI_CONSTANTS.COLORS.RESOURCES.FOOD,
-    research: UI_CONSTANTS.COLORS.RESOURCES.RESEARCH,
-    alloys: UI_CONSTANTS.COLORS.RESOURCES.ALLOYS,
-    exoticMatter: UI_CONSTANTS.COLORS.RESOURCES.EXOTIC_MATTER
+    energy: uiConstants.COLORS.RESOURCES.ENERGY,
+    minerals: uiConstants.COLORS.RESOURCES.MINERALS,
+    food: uiConstants.COLORS.RESOURCES.FOOD,
+    research: uiConstants.COLORS.RESOURCES.RESEARCH,
+    alloys: uiConstants.COLORS.RESOURCES.ALLOYS,
+    exoticMatter: uiConstants.COLORS.RESOURCES.EXOTIC_MATTER
   };
   
   return colorMap[resource] || 'text-gray-400';
@@ -107,14 +107,14 @@ export const getResourceColor = (resource: string): string => {
 
 export const getPlanetColor = (planetType: string): string => {
   const colorMap: Record<string, string> = {
-    water: UI_CONSTANTS.COLORS.PLANETS.WATER,
-    volcanic: UI_CONSTANTS.COLORS.PLANETS.VOLCANIC,
-    rocky: UI_CONSTANTS.COLORS.PLANETS.ROCKY,
-    gas: UI_CONSTANTS.COLORS.PLANETS.GAS,
-    ice: UI_CONSTANTS.COLORS.PLANETS.ICE,
-    living: UI_CONSTANTS.COLORS.PLANETS.LIVING,
-    desolate: UI_CONSTANTS.COLORS.PLANETS.DESOLATE,
-    exotic: UI_CONSTANTS.COLORS.PLANETS.EXOTIC
+    water: uiConstants.COLORS.PLANETS.WATER,
+    volcanic: uiConstants.COLORS.PLANETS.VOLCANIC,
+    rocky: uiConstants.COLORS.PLANETS.ROCKY,
+    gas: uiConstants.COLORS.PLANETS.GAS,
+    ice: uiConstants.COLORS.PLANETS.ICE,
+    living: uiConstants.COLORS.PLANETS.LIVING,
+    desolate: uiConstants.COLORS.PLANETS.DESOLATE,
+    exotic: uiConstants.COLORS.PLANETS.EXOTIC
   };
   
   return colorMap[planetType] || 'text-gray-400';
@@ -122,11 +122,11 @@ export const getPlanetColor = (planetType: string): string => {
 
 export const getNotificationColor = (type: string): string => {
   const colorMap: Record<string, string> = {
-    info: UI_CONSTANTS.COLORS.NOTIFICATIONS.INFO,
-    success: UI_CONSTANTS.COLORS.NOTIFICATIONS.SUCCESS,
-    warning: UI_CONSTANTS.COLORS.NOTIFICATIONS.WARNING,
-    error: UI_CONSTANTS.COLORS.NOTIFICATIONS.ERROR
+    info: uiConstants.COLORS.NOTIFICATIONS.INFO,
+    success: uiConstants.COLORS.NOTIFICATIONS.SUCCESS,
+    warning: uiConstants.COLORS.NOTIFICATIONS.WARNING,
+    error: uiConstants.COLORS.NOTIFICATIONS.ERROR
   };
   
-  return colorMap[type] || UI_CONSTANTS.COLORS.NOTIFICATIONS.INFO;
+  return colorMap[type] || uiConstants.COLORS.NOTIFICATIONS.INFO;
 };

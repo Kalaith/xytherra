@@ -1,5 +1,5 @@
 import type { Empire, GameState, AIPersonality } from '../types/game.d.ts';
-import { GAME_CONSTANTS } from '../constants/gameConstants';
+import { gameConstants } from '../constants/gameConstants';
 import { TECHNOLOGIES } from '../data/gameData';
 
 export interface AIDecision {
@@ -44,7 +44,7 @@ export class AIService {
   /**
    * Make research decisions based on AI personality
    */
-  private static makeResearchDecision(empire: Empire, gameState: GameState): AIDecision | null {
+  private static makeResearchDecision(empire: Empire, _gameState: GameState): AIDecision | null {
     if (empire.currentResearch) {
       return null; // Already researching something
     }
@@ -60,7 +60,7 @@ export class AIService {
     }
     
     const chosenTech = this.selectTechByPersonality(availableTechs, personality);
-    const basePriority = GAME_CONSTANTS.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof GAME_CONSTANTS.AI.DECISION_WEIGHTS].RESEARCH;
+    const basePriority = gameConstants.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof gameConstants.AI.DECISION_WEIGHTS].RESEARCH;
     
     return {
       type: 'research',
@@ -112,7 +112,7 @@ export class AIService {
    */
   private static makeExpansionDecision(empire: Empire, gameState: GameState): AIDecision | null {
     const personality = empire.aiPersonality!;
-    const expansionWeight = GAME_CONSTANTS.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof GAME_CONSTANTS.AI.DECISION_WEIGHTS].EXPANSION;
+    const expansionWeight = gameConstants.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof gameConstants.AI.DECISION_WEIGHTS].EXPANSION;
     
     if (expansionWeight < 0.5) {
       return null; // Not interested in expansion
@@ -147,7 +147,10 @@ export class AIService {
   /**
    * Select best colonization target based on personality
    */
-  private static selectBestColonizationTarget(planets: any[], personality: AIPersonality) {
+  private static selectBestColonizationTarget(
+    planets: GameState['galaxy']['systems'][string]['planets'],
+    personality: AIPersonality
+  ) {
     // Simple scoring system - can be expanded
     const scores = planets.map(planet => {
       let score = planet.size * 10; // Base score from size
@@ -172,7 +175,7 @@ export class AIService {
       }
       
       // Bonus for resource-rich traits
-      planet.traits.forEach((trait: any) => {
+      planet.traits.forEach((trait) => {
         if (trait.id === 'resource-rich') score += 15;
         if (trait.id === 'pristine-biosphere') score += 10;
       });
@@ -187,9 +190,9 @@ export class AIService {
   /**
    * Make military decisions
    */
-  private static makeMilitaryDecision(empire: Empire, gameState: GameState): AIDecision | null {
+  private static makeMilitaryDecision(empire: Empire, _gameState: GameState): AIDecision | null {
     const personality = empire.aiPersonality!;
-    const militaryWeight = GAME_CONSTANTS.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof GAME_CONSTANTS.AI.DECISION_WEIGHTS].MILITARY;
+    const militaryWeight = gameConstants.AI.DECISION_WEIGHTS[personality.toUpperCase() as keyof typeof gameConstants.AI.DECISION_WEIGHTS].MILITARY;
     
     if (militaryWeight < 0.4) {
       return null; // Not military focused
@@ -224,7 +227,7 @@ export class AIService {
       startResearch: (empireId: string, techId: string) => void;
       colonizePlanet: (planetId: string, empireId: string) => void;
       createFleet: (empireId: string, systemId: string) => string;
-      addNotification: (notification: any) => void;
+      addNotification: (notification: { type: string; title: string; message: string }) => void;
     }
   ): void {
     decisions.forEach(decision => {
@@ -246,12 +249,12 @@ export class AIService {
           }
           break;
           
-        case 'build_fleet':
+        case 'build_fleet': {
           // Find a suitable system to build fleet
-          const homeSystem = Object.values(gameState.galaxy.systems).find(system =>
-            system.planets.some(p => p.id === empire.homeworld)
+          const homeSystem = Object.values(gameState.galaxy.systems).find((system) =>
+            system.planets.some((p) => p.id === empire.homeworld)
           );
-          
+
           if (homeSystem) {
             actions.createFleet(empire.id, homeSystem.id);
             actions.addNotification({
@@ -261,6 +264,7 @@ export class AIService {
             });
           }
           break;
+        }
       }
     });
   }
@@ -288,7 +292,7 @@ export class AIService {
    */
   private static calculateMilitaryPower(empire: Empire): number {
     return empire.fleets.reduce((total, fleet) => 
-      total + fleet.ships.length * GAME_CONSTANTS.FLEET.BASE_COMBAT_POWER_PER_SHIP, 0
+      total + fleet.ships.length * gameConstants.FLEET.BASE_COMBAT_POWER_PER_SHIP, 0
     );
   }
 }

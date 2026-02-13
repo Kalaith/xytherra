@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import type { Empire, StarSystem, Planet } from '../types/game.d.ts';
+import type { Empire } from '../types/game.d.ts';
 
 // Performance optimized selectors that only subscribe to what they need
 export const useEmpireSelector = (empireId: string) => {
@@ -98,8 +98,8 @@ export const useSystemDetails = (systemId: string, playerEmpireId: string) => {
 };
 
 // Cache for expensive calculations
-const calculationCache = new Map<string, { value: any; timestamp: number }>();
-const CACHE_TTL = 5000; // 5 seconds
+const calculationCache = new Map<string, { value: unknown; timestamp: number }>();
+const cacheTtl = 5000; // 5 seconds
 
 export const useCachedCalculation = <T>(
   key: string,
@@ -110,8 +110,8 @@ export const useCachedCalculation = <T>(
     const cacheKey = `${key}-${JSON.stringify(dependencies)}`;
     const cached = calculationCache.get(cacheKey);
     
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.value;
+    if (cached && Date.now() - cached.timestamp < cacheTtl) {
+      return cached.value as T;
     }
     
     const value = calculation();

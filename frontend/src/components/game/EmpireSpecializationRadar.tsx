@@ -30,7 +30,7 @@ interface RadarDataPoint {
 const EmpireSpecializationRadar: React.FC<EmpireSpecializationRadarProps> = ({
   empire,
   size = 'medium',
-  showLabels = true,
+  showLabels: _showLabels = true,
   interactive = true,
   className = ''
 }) => {
@@ -103,7 +103,13 @@ const EmpireSpecializationRadar: React.FC<EmpireSpecializationRadarProps> = ({
 
   const chartSize = getChartSize();
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  type CustomTooltipProps = {
+    active?: boolean;
+    payload?: Array<{ payload: { rawWeight: number; value: number } }>;
+    label?: string;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

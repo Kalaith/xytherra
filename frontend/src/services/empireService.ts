@@ -1,5 +1,5 @@
-import type { Empire, ResourceType, GameState, Fleet, Planet } from '../types/game.d.ts';
-import { GAME_CONSTANTS } from '../constants/gameConstants';
+import type { Empire, ResourceType, Planet } from '../types/game.d.ts';
+import { gameConstants } from '../constants/gameConstants';
 import { TECHNOLOGIES } from '../data/gameData';
 
 export interface TurnProcessingResult {
@@ -66,7 +66,7 @@ export class EmpireService {
    */
   static calculateCombatPower(empire: Empire): number {
     return empire.fleets.reduce((total, fleet) => {
-      return total + fleet.ships.length * GAME_CONSTANTS.FLEET.BASE_COMBAT_POWER_PER_SHIP;
+      return total + fleet.ships.length * gameConstants.FLEET.BASE_COMBAT_POWER_PER_SHIP;
     }, 0);
   }
   
@@ -134,15 +134,15 @@ export class EmpireService {
   /**
    * Calculate colonization cost including any modifiers
    */
-  static calculateColonizationCost(planet: Planet, empire: Empire): Record<ResourceType, number> {
+  static calculateColonizationCost(_planet: Planet, _empire: Empire): Record<ResourceType, number> {
     // Convert uppercase constants to lowercase resource keys
     const baseCost: Record<ResourceType, number> = {
-      energy: GAME_CONSTANTS.COLONIZATION.BASE_COST.ENERGY,
-      minerals: GAME_CONSTANTS.COLONIZATION.BASE_COST.MINERALS,
-      food: GAME_CONSTANTS.COLONIZATION.BASE_COST.FOOD,
-      research: GAME_CONSTANTS.COLONIZATION.BASE_COST.RESEARCH,
-      alloys: GAME_CONSTANTS.COLONIZATION.BASE_COST.ALLOYS,
-      exoticMatter: GAME_CONSTANTS.COLONIZATION.BASE_COST.EXOTIC_MATTER
+      energy: gameConstants.COLONIZATION.BASE_COST.ENERGY,
+      minerals: gameConstants.COLONIZATION.BASE_COST.MINERALS,
+      food: gameConstants.COLONIZATION.BASE_COST.FOOD,
+      research: gameConstants.COLONIZATION.BASE_COST.RESEARCH,
+      alloys: gameConstants.COLONIZATION.BASE_COST.ALLOYS,
+      exoticMatter: gameConstants.COLONIZATION.BASE_COST.EXOTIC_MATTER
     };
     
     // Apply faction bonuses or penalties

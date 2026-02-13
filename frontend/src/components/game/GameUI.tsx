@@ -16,15 +16,16 @@ import {
   Crosshair
 } from 'lucide-react';
 import type { SidePanel, GameView } from '../../types/game.d.ts';
+import type { Planet } from '../../types/game.d.ts';
 import { useGameStore } from '../../stores/gameStore';
-import { UI_CONSTANTS, getResourceColor, getNotificationColor } from '../../constants/uiConstants';
+import { uiConstants, getResourceColor, getNotificationColor } from '../../constants/uiConstants';
 import { Button } from '../ui/Button';
 import { ResizableSidebarLayout } from '../ui/ResizableSidebarLayout';
 import VictoryPanel from './VictoryPanel';
 import DiplomacyPanel from './DiplomacyPanel';
 import CombatLog from './CombatLog';
 
-const RESOURCE_ICONS = {
+const resourceIcons = {
   energy: Zap,
   minerals: Coins,
   food: Wheat,
@@ -33,7 +34,7 @@ const RESOURCE_ICONS = {
   exoticMatter: Sparkles
 } as const;
 
-const SIDE_PANEL_TITLES: Record<Exclude<SidePanel, 'none'>, string> = {
+const sidePanelTitles: Record<Exclude<SidePanel, 'none'>, string> = {
   'planet-info': 'Planet Information',
   'colony-management': 'Colony Management',
   'research-tree': 'Research Tree',
@@ -44,7 +45,7 @@ const SIDE_PANEL_TITLES: Record<Exclude<SidePanel, 'none'>, string> = {
   'fleet-details': 'Fleet Details'
 };
 
-const PANEL_BUTTONS: Array<{
+const panelButtons: Array<{
   id: SidePanel;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -54,7 +55,7 @@ const PANEL_BUTTONS: Array<{
   { id: 'combat-log', label: 'Combat Log', icon: Crosshair }
 ];
 
-const VIEW_BUTTONS: Array<{ id: GameView; label: string }> = [
+const viewButtons: Array<{ id: GameView; label: string }> = [
   { id: 'galaxy', label: 'Galaxy' },
   { id: 'colony', label: 'Colonies' },
   { id: 'specialization', label: 'Specialization' },
@@ -75,7 +76,7 @@ export const GameUI: React.FC = () => {
     return null;
   }
 
-  const notificationsToShow = notifications.slice(-UI_CONSTANTS.LAYOUT.MAX_NOTIFICATIONS_DISPLAY);
+  const notificationsToShow = notifications.slice(-uiConstants.LAYOUT.MAX_NOTIFICATIONS_DISPLAY);
 
   const handlePanelToggle = (panel: SidePanel) => {
     if (panel === 'none') return;
@@ -111,7 +112,7 @@ export const GameUI: React.FC = () => {
   const renderResourceMeters = () => (
     <div className="flex flex-wrap items-center gap-4">
       {Object.entries(playerEmpire.resources).map(([resource, amount]) => {
-        const Icon = RESOURCE_ICONS[resource as keyof typeof RESOURCE_ICONS];
+        const Icon = resourceIcons[resource as keyof typeof resourceIcons];
         const color = getResourceColor(resource);
         const income = playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
 
@@ -144,7 +145,7 @@ export const GameUI: React.FC = () => {
             {renderResourceMeters()}
           </div>
           <div className="flex items-center gap-2">
-            {PANEL_BUTTONS.map(({ id, label, icon: Icon }) => {
+            {panelButtons.map(({ id, label, icon: Icon }) => {
               const isActive = sidePanel === id;
               const showBadge = id === 'combat-log' && combatLogCount > 0;
               return (
@@ -190,7 +191,7 @@ export const GameUI: React.FC = () => {
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-3">
               <h3 className="text-sm font-semibold text-white">
-                {sidePanel !== 'none' ? SIDE_PANEL_TITLES[sidePanel as Exclude<SidePanel, 'none'>] : 'Details'}
+                {sidePanel !== 'none' ? sidePanelTitles[sidePanel as Exclude<SidePanel, 'none'>] : 'Details'}
               </h3>
               <button
                 type="button"
@@ -241,7 +242,7 @@ export const GameUI: React.FC = () => {
       <footer className="pointer-events-auto rounded-2xl border border-slate-800/60 bg-slate-900/85 px-6 py-4 shadow-lg shadow-slate-900/40 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            {VIEW_BUTTONS.map((view) => (
+            {viewButtons.map((view) => (
               <Button
                 key={view.id}
                 variant={gameState.uiState.currentView === view.id ? 'primary' : 'secondary'}
@@ -279,7 +280,7 @@ const PlanetInfoPanel: React.FC = () => {
     return <div className="text-slate-400">No planet selected</div>;
   }
 
-  let selectedPlanet: any = null;
+  let selectedPlanet: Planet | null = null;
   for (const system of Object.values(gameState.galaxy.systems)) {
     const planet = system.planets.find((p) => p.id === selectedPlanetId);
     if (planet) {
@@ -315,7 +316,7 @@ const PlanetInfoPanel: React.FC = () => {
             <div className="space-y-2">
               <span className="text-sm text-slate-400">Traits</span>
               <div className="space-y-2">
-                {selectedPlanet.traits.map((trait: any, idx: number) => (
+                {selectedPlanet.traits.map((trait, idx: number) => (
                   <div key={idx} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-3">
                     <div className="font-medium text-white">{trait.name}</div>
                     <div className="text-xs text-slate-400">{trait.description}</div>

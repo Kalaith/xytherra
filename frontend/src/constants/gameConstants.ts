@@ -1,5 +1,5 @@
 // Game balance and configuration constants
-export const GAME_CONSTANTS = {
+export const gameConstants = {
   GALAXY: {
     SEED_MAX: 1_000_000,
     DIMENSIONS: {
@@ -145,21 +145,21 @@ export const GAME_CONSTANTS = {
 
 // Helper functions to get constants with type safety
 export const getGalaxyDimensions = (size: 'small' | 'medium' | 'large'): number => {
-  return GAME_CONSTANTS.GALAXY.DIMENSIONS[size.toUpperCase() as keyof typeof GAME_CONSTANTS.GALAXY.DIMENSIONS];
+  return gameConstants.GALAXY.DIMENSIONS[size.toUpperCase() as keyof typeof gameConstants.GALAXY.DIMENSIONS];
 };
 
 export const getSystemCount = (size: 'small' | 'medium' | 'large'): number => {
-  return GAME_CONSTANTS.GALAXY.SYSTEM_COUNTS[size.toUpperCase() as keyof typeof GAME_CONSTANTS.GALAXY.SYSTEM_COUNTS];
+  return gameConstants.GALAXY.SYSTEM_COUNTS[size.toUpperCase() as keyof typeof gameConstants.GALAXY.SYSTEM_COUNTS];
 };
 
 export const generateRandomSeed = (): number => {
-  return Math.floor(Math.random() * GAME_CONSTANTS.GALAXY.SEED_MAX);
+  return Math.floor(Math.random() * gameConstants.GALAXY.SEED_MAX);
 };
 
 export const generateRandomPlanetCount = (): number => {
-  return Math.floor(Math.random() * GAME_CONSTANTS.PLANET.MAX_PER_SYSTEM) + GAME_CONSTANTS.PLANET.MIN_PER_SYSTEM;
+  return Math.floor(Math.random() * gameConstants.PLANET.MAX_PER_SYSTEM) + gameConstants.PLANET.MIN_PER_SYSTEM;
 };
 
 export const generateRandomPlanetSize = (): number => {
-  return Math.floor(Math.random() * GAME_CONSTANTS.PLANET.MAX_SIZE) + GAME_CONSTANTS.PLANET.MIN_SIZE;
+  return Math.floor(Math.random() * gameConstants.PLANET.MAX_SIZE) + gameConstants.PLANET.MIN_SIZE;
 };

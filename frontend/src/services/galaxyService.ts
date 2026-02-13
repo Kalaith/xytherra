@@ -1,11 +1,11 @@
-﻿import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType, PlanetTrait } from '../types/game.d.ts';
+import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType, PlanetTrait } from '../types/game.d.ts';
 import {
-  GAME_CONSTANTS,
+  gameConstants,
   getGalaxyDimensions,
   getSystemCount,
   generateRandomSeed,
 } from '../constants/gameConstants';
-import { PLANET_TRAITS } from '../data/gameData';
+import { planetTraits } from '../data/gameData';
 import { addHyperlanesToGalaxy } from './hyperlaneService';
 import {
   createRandomNumberGenerator,
@@ -88,11 +88,11 @@ export class GalaxyGenerationService {
     systemId: string,
     randomNumberGenerator: RandomNumberGenerator,
   ): Planet[] {
-    const maximumPlanetsExclusive = GAME_CONSTANTS.PLANET.MAX_PER_SYSTEM + 1;
+    const maximumPlanetsExclusive = gameConstants.PLANET.MAX_PER_SYSTEM + 1;
     const planetCountInSystem = generateRandomInteger(
       randomNumberGenerator,
       maximumPlanetsExclusive,
-      GAME_CONSTANTS.PLANET.MIN_PER_SYSTEM,
+      gameConstants.PLANET.MIN_PER_SYSTEM,
     );
 
     const generatedPlanets: Planet[] = [];
@@ -122,7 +122,7 @@ export class GalaxyGenerationService {
 
     const planetType = this.weightedRandomChoice(
       planetTypes,
-      GAME_CONSTANTS.GALAXY_GENERATION.PLANET_TYPE_WEIGHTS,
+      gameConstants.GALAXY_GENERATION.PLANET_TYPE_WEIGHTS,
       randomNumberGenerator,
     );
 
@@ -133,8 +133,8 @@ export class GalaxyGenerationService {
       coordinates: { x: 0, y: 0 },
       size: generateRandomInteger(
         randomNumberGenerator,
-        GAME_CONSTANTS.PLANET.MAX_SIZE + 1,
-        GAME_CONSTANTS.PLANET.MIN_SIZE,
+        gameConstants.PLANET.MAX_SIZE + 1,
+        gameConstants.PLANET.MIN_SIZE,
       ),
       traits: this.generatePlanetTraits(randomNumberGenerator),
       systemId,
@@ -143,17 +143,17 @@ export class GalaxyGenerationService {
   }
 
   private static generatePlanetTraits(randomNumberGenerator: RandomNumberGenerator): PlanetTrait[] {
-    const availableTraits = Object.values(PLANET_TRAITS);
+    const availableTraits = Object.values(planetTraits);
     if (availableTraits.length === 0) {
       return [];
     }
 
     const traitRoll = randomNumberGenerator();
-    if (traitRoll <= GAME_CONSTANTS.PLANET.TRAIT_CHANCES.NO_TRAITS) {
+    if (traitRoll <= gameConstants.PLANET.TRAIT_CHANCES.NO_TRAITS) {
       return [];
     }
 
-    const shouldGenerateTwoTraits = traitRoll >= GAME_CONSTANTS.PLANET.TRAIT_CHANCES.TWO_TRAITS;
+    const shouldGenerateTwoTraits = traitRoll >= gameConstants.PLANET.TRAIT_CHANCES.TWO_TRAITS;
     const traitCount = shouldGenerateTwoTraits ? 2 : 1;
 
     const selectedTraits: PlanetTrait[] = [];

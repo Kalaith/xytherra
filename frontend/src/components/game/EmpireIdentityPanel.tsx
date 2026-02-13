@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import type { Empire, TechDomain, PlanetType } from '../../types/game.d.ts';
+import type { Empire, TechDomain } from '../../types/game.d.ts';
 
 interface EmpireIdentityPanelProps {
   empire: Empire;

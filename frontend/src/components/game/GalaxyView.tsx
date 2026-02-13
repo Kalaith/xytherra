@@ -16,11 +16,10 @@ import {
   Users
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
-import type { PlanetType, StarSystem, Planet, Hyperlane } from '../../types/game.d.ts';
-import { GAME_CONSTANTS } from '../../constants/gameConstants';
+import type { StarSystem, Planet, Hyperlane } from '../../types/game.d.ts';
 import { generateStarField } from '../../utils/randomGeneration';
 
-const PLANET_ICONS = {
+const planetIcons = {
   water: Waves,
   volcanic: Flame,
   rocky: Mountain,
@@ -31,7 +30,7 @@ const PLANET_ICONS = {
   exotic: Atom
 } as const;
 
-const PLANET_COLORS = {
+const planetColors = {
   water: 'text-blue-400',
   volcanic: 'text-red-400',
   rocky: 'text-gray-400',
@@ -43,7 +42,7 @@ const PLANET_COLORS = {
 } as const;
 
 
-const STAR_COUNT = 180;
+const starCount = 180;
 // System importance classification
 const getSystemImportance = (system: StarSystem): 'strategic' | 'resource-rich' | 'standard' => {
   const planetTypes = system.planets.map(p => p.type);
@@ -268,8 +267,8 @@ interface PlanetDisplayProps {
 
 const PlanetDisplay: React.FC<PlanetDisplayProps> = ({ planet, onPlanetClick }) => {
   const playerEmpireId = useGameStore((state) => state.playerEmpireId);
-  const PlanetIcon = PLANET_ICONS[planet.type];
-  const planetColor = PLANET_COLORS[planet.type];
+  const PlanetIcon = planetIcons[planet.type];
+  const planetColor = planetColors[planet.type];
   const isSurveyed = planet.surveyedBy.includes(playerEmpireId);
   const isColonized = planet.colonizedBy !== undefined;
 
@@ -457,7 +456,7 @@ export default function GalaxyView() {
   const generateHyperlanes = useGameStore((state) => state.generateHyperlanes);
 
   const starField = useMemo(
-    () => generateStarField(galaxy.seed, STAR_COUNT),
+    () => generateStarField(galaxy.seed, starCount),
     [galaxy.seed]
   );
   const systems = useMemo(() => Object.values(galaxy.systems), [galaxy.systems]);

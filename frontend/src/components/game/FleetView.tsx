@@ -5,7 +5,6 @@ import {
   Zap, 
   Shield, 
   Target, 
-  Users, 
   Plus, 
   Settings,
   Navigation,
@@ -14,7 +13,15 @@ import {
   Star
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
-import type { Fleet, Ship, ShipStats } from '../../types/game.d.ts';
+import type { Fleet } from '../../types/game.d.ts';
+
+interface ShipDesign {
+  id: string;
+  name: string;
+  class: string;
+  stats: { health: number; attack: number; defense: number; speed: number; range: number };
+  cost: { minerals: number; alloys: number; energy: number };
+}
 
 const FleetView: React.FC = () => {
   const gameState = useGameStore();
@@ -48,7 +55,7 @@ const FleetView: React.FC = () => {
   const selectedFleetData = selectedFleet ? fleets.find(f => f.id === selectedFleet) : null;
 
   // Sample ship designs for new fleets
-  const shipDesigns = [
+  const shipDesigns: ShipDesign[] = [
     {
       id: 'corvette',
       name: 'Corvette',
@@ -300,7 +307,7 @@ const FleetDetailPanel: React.FC<{ fleet: Fleet }> = ({ fleet }) => {
 };
 
 // Ship Designer Panel Component
-const ShipDesignerPanel: React.FC<{ shipDesigns: any[] }> = ({ shipDesigns }) => {
+const ShipDesignerPanel: React.FC<{ shipDesigns: ShipDesign[] }> = ({ shipDesigns }) => {
   return (
     <div className="bg-slate-800 rounded-lg p-6">
       <div className="mb-6">

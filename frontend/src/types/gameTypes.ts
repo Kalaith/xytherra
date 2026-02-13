@@ -3,10 +3,8 @@ import type {
   GameState, 
   ResourceType, 
   VictoryCondition,
-  CombatResult,
   Planet,
-  StarSystem,
-  Fleet
+  StarSystem
 } from './game.d.ts';
 
 // Utility types for better type safety

@@ -75,7 +75,7 @@ const createInitialUIState = (): UIState => ({
   debugMode: false
 });
 
-export const useUIStore = create<UIStore>((set, get) => ({
+export const useUIStore = create<UIStore>((set, _get) => ({
   ...createInitialUIState(),
   
   // View Actions

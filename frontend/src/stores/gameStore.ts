@@ -3,14 +3,10 @@ import { persist } from 'zustand/middleware';
 import type { 
   GameState, 
   Empire, 
-  Galaxy, 
-  StarSystem, 
-  Planet, 
   UIState,
   GameSettings,
   VictoryCondition,
   Coordinates,
-  Fleet,
   GameView,
   SidePanel,
   Notification,
@@ -18,22 +14,16 @@ import type {
   ResourceType,
   CombatResult,
   VictoryProgress,
-  AIPersonality,
-  Ship,
-  ShipDesign
+  AIPersonality
 } from '../types/game.d.ts';
 import { 
   TECHNOLOGIES, 
-  FACTION_BONUSES, 
-  PLANET_TRAITS, 
-  AI_EMPIRE_TEMPLATES, 
-  COMBAT_MODIFIERS, 
-  VICTORY_CONDITIONS,
-  DEFAULT_SHIP_DESIGNS
+  factionBonuses, 
+  aiEmpireTemplates, 
+  combatModifiers, 
+  victoryConditions
 } from '../data/gameData';
-import { GAME_CONSTANTS } from '../constants/gameConstants';
-
-import { UI_CONSTANTS } from '../constants/uiConstants';
+import { gameConstants } from '../constants/gameConstants';
 
 
 import { EmpireService } from '../services/empireService';
@@ -43,7 +33,7 @@ import { FleetService } from '../services/fleetService';
 import { PlanetTechService } from '../services/planetTechService';
 import { ensureGalaxyHasHyperlanes } from '../services/hyperlaneService';
 
-const MAX_COMBAT_LOG_ENTRIES = 25;
+const maxCombatLogEntries = 25;
 
 interface GameStore extends GameState {
   // Game Actions
@@ -99,9 +89,9 @@ const createInitialGameState = (): GameState => ({
     size: 'medium',
     systems: {},
     hyperlanes: {},
-    width: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
-    height: GAME_CONSTANTS.GALAXY.DIMENSIONS.MEDIUM,
-    seed: Math.floor(Math.random() * GAME_CONSTANTS.GALAXY.SEED_MAX)
+    width: gameConstants.GALAXY.DIMENSIONS.MEDIUM,
+    height: gameConstants.GALAXY.DIMENSIONS.MEDIUM,
+    seed: Math.floor(Math.random() * gameConstants.GALAXY.SEED_MAX)
   },
   empires: {},
   activeEvents: [],
@@ -178,7 +168,7 @@ export const useGameStore = create<GameStore>()(
           const systemIds = Object.keys(galaxy.systems);
           const availableSystems = [...systemIds];
           
-          Object.values(empires).forEach((empire, index) => {
+          Object.values(empires).forEach((empire, _index) => {
             // Assign random homeworld system
             const randomIndex = Math.floor(Math.random() * availableSystems.length);
             const systemId = availableSystems.splice(randomIndex, 1)[0];
@@ -186,7 +176,7 @@ export const useGameStore = create<GameStore>()(
             
             if (system && system.planets.length > 0) {
               // Find suitable homeworld planet based on faction
-              const factionHomeType = FACTION_BONUSES[empire.faction].homeworld;
+              const factionHomeType = factionBonuses[empire.faction].homeworld;
               let homeworld = system.planets.find(p => p.type === factionHomeType);
               
               // Fallback to any habitable planet
@@ -208,15 +198,15 @@ export const useGameStore = create<GameStore>()(
                   id: `colony-${homeworld.id}`,
                   planetId: homeworld.id,
                   empireId: empire.id,
-                  population: GAME_CONSTANTS.EMPIRE.HOMEWORLD_POPULATION,
+                  population: gameConstants.EMPIRE.HOMEWORLD_POPULATION,
                   buildings: [],
                   resourceOutput: {
-                    energy: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.ENERGY,
-                    minerals: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.MINERALS,
-                    food: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.FOOD,
-                    research: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.RESEARCH,
-                    alloys: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.ALLOYS,
-                    exoticMatter: GAME_CONSTANTS.EMPIRE.HOMEWORLD_OUTPUT.EXOTIC_MATTER
+                    energy: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.ENERGY,
+                    minerals: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.MINERALS,
+                    food: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.FOOD,
+                    research: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.RESEARCH,
+                    alloys: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.ALLOYS,
+                    exoticMatter: gameConstants.EMPIRE.HOMEWORLD_OUTPUT.EXOTIC_MATTER
                   },
                   established: 1,
                   developmentLevel: 1
@@ -362,22 +352,19 @@ export const useGameStore = create<GameStore>()(
           
           console.log('Attempting to colonize planet:', planetId, 'by empire:', empireId);
           
-          // Find the planet and add colony
-          let planetFound = false;
-          let colonizationSuccessful = false;
-          let targetPlanet = null;
-          let targetSystem = null;
-          
-          // First, find the planet
-          for (const system of Object.values(state.galaxy.systems)) {
-            const planet = system.planets.find(p => p.id === planetId);
-            if (planet) {
-              planetFound = true;
-              targetPlanet = planet;
-              targetSystem = system;
-              break;
-            }
-          }
+           // Find the planet and add colony
+           let planetFound = false;
+           let targetPlanet = null;
+           
+           // First, find the planet
+           for (const system of Object.values(state.galaxy.systems)) {
+             const planet = system.planets.find(p => p.id === planetId);
+             if (planet) {
+               planetFound = true;
+               targetPlanet = planet;
+               break;
+             }
+           }
           
           if (!planetFound) {
             console.error('Planet not found:', planetId);
@@ -439,15 +426,15 @@ export const useGameStore = create<GameStore>()(
               id: `colony-${planetId}`,
               planetId,
               empireId,
-              population: GAME_CONSTANTS.EMPIRE.COLONY_POPULATION,
+              population: gameConstants.EMPIRE.COLONY_POPULATION,
               buildings: [],
               resourceOutput: {
-                energy: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ENERGY,
-                minerals: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.MINERALS,
-                food: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.FOOD,
-                research: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.RESEARCH,
-                alloys: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.ALLOYS,
-                exoticMatter: GAME_CONSTANTS.EMPIRE.COLONY_OUTPUT.EXOTIC_MATTER
+                energy: gameConstants.EMPIRE.COLONY_OUTPUT.ENERGY,
+                minerals: gameConstants.EMPIRE.COLONY_OUTPUT.MINERALS,
+                food: gameConstants.EMPIRE.COLONY_OUTPUT.FOOD,
+                research: gameConstants.EMPIRE.COLONY_OUTPUT.RESEARCH,
+                alloys: gameConstants.EMPIRE.COLONY_OUTPUT.ALLOYS,
+                exoticMatter: gameConstants.EMPIRE.COLONY_OUTPUT.EXOTIC_MATTER
               },
               established: state.turn,
               developmentLevel: 1
@@ -532,11 +519,9 @@ export const useGameStore = create<GameStore>()(
               });
             }
             
-            // Update planets conquered counter
-            updatedEmpire.planetsConquered += 1;
-            
-            colonizationSuccessful = true;
-            console.log('Colonization completed successfully');
+             // Update planets conquered counter
+             updatedEmpire.planetsConquered += 1;
+             console.log('Colonization completed successfully');
             
           } catch (error) {
             console.error('Error during colonization:', error);
@@ -608,7 +593,7 @@ export const useGameStore = create<GameStore>()(
       },
 
       createFleet: (empireId, systemId) => {
-        const fleetId = `${GAME_CONSTANTS.FLEET.FLEET_ID_PREFIX}${Date.now()}`;
+        const fleetId = `${gameConstants.FLEET.FLEET_ID_PREFIX}${Date.now()}`;
         set((state) => {
           const empire = state.empires[empireId];
           const system = state.galaxy.systems[systemId];
@@ -705,7 +690,7 @@ export const useGameStore = create<GameStore>()(
       addCombatResult: (result) => {
         set((state) => {
           const currentLog = state.uiState.combatLog ?? [];
-          const nextLog = [result, ...currentLog].slice(0, MAX_COMBAT_LOG_ENTRIES);
+          const nextLog = [result, ...currentLog].slice(0, maxCombatLogEntries);
           return {
             ...state,
             uiState: {
@@ -727,7 +712,7 @@ export const useGameStore = create<GameStore>()(
       },
 
       // Combat System
-      resolveCombat: (attackerId: string, defenderId: string, location: string) => {
+      resolveCombat: (attackerId: string, defenderId: string, _location: string) => {
         const state = get();
         const attacker = state.empires[attackerId];
         const defender = state.empires[defenderId];
@@ -748,11 +733,11 @@ export const useGameStore = create<GameStore>()(
         const defensePower = EmpireService.calculateCombatPower(defender);
         
         // Apply combat modifiers from constants
-        const attackModifier = COMBAT_MODIFIERS.factionBonuses[attacker.faction]?.attack || 1.0;
-        const defenseModifier = COMBAT_MODIFIERS.factionBonuses[defender.faction]?.defense || 1.0;
+        const attackModifier = combatModifiers.factionBonuses[attacker.faction]?.attack || 1.0;
+        const defenseModifier = combatModifiers.factionBonuses[defender.faction]?.defense || 1.0;
         
         const finalAttackPower = attackPower * attackModifier;
-        const finalDefensePower = defensePower * defenseModifier * GAME_CONSTANTS.COMBAT.PLANETARY_DEFENSE_BONUS;
+        const finalDefensePower = defensePower * defenseModifier * gameConstants.COMBAT.PLANETARY_DEFENSE_BONUS;
         
         const result: CombatResult = {
           attacker: {
@@ -770,8 +755,8 @@ export const useGameStore = create<GameStore>()(
           winner: finalAttackPower > finalDefensePower ? 'attacker' : 'defender',
           planetCaptured: false,
           experienceGained: {
-            [attackerId]: GAME_CONSTANTS.COMBAT.BASE_EXPERIENCE_GAIN.WINNER,
-            [defenderId]: GAME_CONSTANTS.COMBAT.BASE_EXPERIENCE_GAIN.LOSER
+            [attackerId]: gameConstants.COMBAT.BASE_EXPERIENCE_GAIN.WINNER,
+            [defenderId]: gameConstants.COMBAT.BASE_EXPERIENCE_GAIN.LOSER
           }
         };
         
@@ -821,7 +806,7 @@ export const useGameStore = create<GameStore>()(
         const results: VictoryProgress[] = [];
         
         Object.values(state.empires).forEach(empire => {
-          Object.entries(VICTORY_CONDITIONS).forEach(([key, condition]) => {
+          Object.entries(victoryConditions).forEach(([key, condition]) => {
             const progress = condition.checkFunction(empire, state.galaxy);
             const isCompleted = progress >= condition.threshold;
             
@@ -965,13 +950,13 @@ function getRandomAIPersonality(): AIPersonality {
 }
 
 function getAIName(personality: AIPersonality, faction: FactionType): string {
-  const template = AI_EMPIRE_TEMPLATES.find(t => t.personality === personality && t.faction === faction);
+  const template = aiEmpireTemplates.find(t => t.personality === personality && t.faction === faction);
   if (template) {
     return template.name;
   }
   
   // Fallback to random template
-  const randomTemplate = AI_EMPIRE_TEMPLATES[Math.floor(Math.random() * AI_EMPIRE_TEMPLATES.length)];
+  const randomTemplate = aiEmpireTemplates[Math.floor(Math.random() * aiEmpireTemplates.length)];
   return randomTemplate.name;
 }
 
@@ -987,29 +972,29 @@ function generateEmpires(settings: GameSettings): Record<string, Empire> {
     
     const empire: Empire = {
       id: empireId,
-      name: isPlayer ? FACTION_BONUSES[factionType].name : getAIName(aiPersonality!, factionType),
+      name: isPlayer ? factionBonuses[factionType].name : getAIName(aiPersonality!, factionType),
       color: generateEmpireColor(i),
       isPlayer,
       aiPersonality,
       homeworld: '', // Will be set when placing homeworld
       faction: factionType,
       resources: {
-        energy: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.ENERGY,
-        minerals: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.MINERALS,
-        food: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.FOOD,
-        research: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.RESEARCH,
-        alloys: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.ALLOYS,
-        exoticMatter: GAME_CONSTANTS.EMPIRE.STARTING_RESOURCES.EXOTIC_MATTER
+        energy: gameConstants.EMPIRE.STARTING_RESOURCES.ENERGY,
+        minerals: gameConstants.EMPIRE.STARTING_RESOURCES.MINERALS,
+        food: gameConstants.EMPIRE.STARTING_RESOURCES.FOOD,
+        research: gameConstants.EMPIRE.STARTING_RESOURCES.RESEARCH,
+        alloys: gameConstants.EMPIRE.STARTING_RESOURCES.ALLOYS,
+        exoticMatter: gameConstants.EMPIRE.STARTING_RESOURCES.EXOTIC_MATTER
       },
       resourceIncome: {
-        energy: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.ENERGY,
-        minerals: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.MINERALS,
-        food: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.FOOD,
-        research: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.RESEARCH,
-        alloys: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.ALLOYS,
-        exoticMatter: GAME_CONSTANTS.EMPIRE.STARTING_INCOME.EXOTIC_MATTER
+        energy: gameConstants.EMPIRE.STARTING_INCOME.ENERGY,
+        minerals: gameConstants.EMPIRE.STARTING_INCOME.MINERALS,
+        food: gameConstants.EMPIRE.STARTING_INCOME.FOOD,
+        research: gameConstants.EMPIRE.STARTING_INCOME.RESEARCH,
+        alloys: gameConstants.EMPIRE.STARTING_INCOME.ALLOYS,
+        exoticMatter: gameConstants.EMPIRE.STARTING_INCOME.EXOTIC_MATTER
       },
-      technologies: new Set(FACTION_BONUSES[factionType].startingTechs),
+      technologies: new Set(factionBonuses[factionType].startingTechs),
       researchProgress: {},
       colonies: [],
       fleets: [],

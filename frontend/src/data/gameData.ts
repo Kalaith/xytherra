@@ -1,6 +1,6 @@
 // Static game data for planet types and their associated technologies
 
-import type { PlanetType, TechDomain, Technology, PlanetTrait, AIPersonality, FactionType } from '../types/game.d.ts';
+import type { PlanetType, TechDomain, Technology, PlanetTrait, AIPersonality, FactionType, Empire, Galaxy } from '../types/game.d.ts';
 
 export interface PlanetTypeInfo {
   id: PlanetType;
@@ -27,7 +27,7 @@ export interface AIEmpireTemplate {
   researchPriority: number; // 0-10
 }
 
-export const PLANET_TYPES: Record<PlanetType, PlanetTypeInfo> = {
+export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
   water: {
     id: 'water',
     name: 'Water World',
@@ -443,7 +443,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
   }
 };
 
-export const PLANET_TRAITS: Record<string, PlanetTrait> = {
+export const planetTraits: Record<string, PlanetTrait> = {
   'resource-rich': {
     id: 'resource-rich',
     name: 'Resource Rich',
@@ -489,7 +489,7 @@ export const PLANET_TRAITS: Record<string, PlanetTrait> = {
 };
 
 // Starting bonuses for each faction
-export const FACTION_BONUSES = {
+export const factionBonuses = {
   'forge-union': {
     name: 'Forge Union',
     homeworld: 'volcanic',
@@ -543,7 +543,7 @@ export const FACTION_BONUSES = {
 } as const;
 
 // AI Empire Templates for procedural generation
-export const AI_EMPIRE_TEMPLATES: AIEmpireTemplate[] = [
+export const aiEmpireTemplates: AIEmpireTemplate[] = [
   {
     name: 'Crimson Hegemony',
     color: '#dc2626',
@@ -625,7 +625,7 @@ export const AI_EMPIRE_TEMPLATES: AIEmpireTemplate[] = [
 ];
 
 // Combat System Data
-export const COMBAT_MODIFIERS = {
+export const combatModifiers = {
   planetaryDefense: 1.5, // Defending on a planet
   fleetExperience: {
     novice: 1.0,     // 0-10 battles
@@ -643,7 +643,7 @@ export const COMBAT_MODIFIERS = {
 };
 
 // Basic Ship Design Templates
-export const DEFAULT_SHIP_DESIGNS = {
+export const defaultShipDesigns = {
   'scout': {
     id: 'scout',
     name: 'Scout',
@@ -689,15 +689,15 @@ export const DEFAULT_SHIP_DESIGNS = {
 } as const;
 
 // Victory Condition Thresholds
-export const VICTORY_CONDITIONS = {
+export const victoryConditions = {
   domination: {
     name: 'Galactic Domination',
     description: 'Control 60% of all inhabited planets',
     threshold: 0.6,
-    checkFunction: (empire: any, galaxy: any) => {
-      const systems = Object.values(galaxy.systems) as any[];
+    checkFunction: (empire: Empire, galaxy: Galaxy) => {
+      const systems = Object.values(galaxy.systems);
       const totalPlanets = systems.reduce((count, system) => {
-        return count + system.planets.filter((p: any) => p.colony).length;
+        return count + system.planets.filter((p) => p.colony).length;
       }, 0);
       const controlledPlanets = empire.colonies.length;
       return totalPlanets > 0 ? controlledPlanets / totalPlanets : 0;
@@ -707,7 +707,7 @@ export const VICTORY_CONDITIONS = {
     name: 'Technological Supremacy',
     description: 'Research 80% of all available technologies',
     threshold: 0.8,
-    checkFunction: (empire: any, gameData: any) => {
+    checkFunction: (empire: Empire, gameData: { TECHNOLOGIES: Record<string, Technology> }) => {
       const totalTechs = Object.keys(gameData.TECHNOLOGIES).length;
       return empire.technologies.size / totalTechs;
     }
@@ -716,9 +716,9 @@ export const VICTORY_CONDITIONS = {
     name: 'Diplomatic Victory',
     description: 'Form alliances with 75% of surviving empires',
     threshold: 0.75,
-    checkFunction: (empire: any, empires: any) => {
-      const otherEmpires = Object.values(empires).filter((e: any) => e.id !== empire.id && !e.isDefeated);
-      const allies = otherEmpires.filter((e: any) => 
+    checkFunction: (empire: Empire, empires: Record<string, Empire>) => {
+      const otherEmpires = Object.values(empires).filter((e) => e.id !== empire.id && !e.isDefeated);
+      const allies = otherEmpires.filter((e) => 
         empire.diplomaticStatus[e.id] === 'allied' || empire.diplomaticStatus[e.id] === 'federated'
       );
       return otherEmpires.length > 0 ? allies.length / otherEmpires.length : 0;
@@ -728,7 +728,7 @@ export const VICTORY_CONDITIONS = {
     name: 'Economic Supremacy',
     description: 'Accumulate 10,000 resources across all types',
     threshold: 10000,
-    checkFunction: (empire: any) => {
+    checkFunction: (empire: Empire) => {
       const resources = Object.values(empire.resources) as number[];
       return resources.reduce((sum: number, val: number) => sum + val, 0);
     }
