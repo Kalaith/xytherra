@@ -20,34 +20,51 @@ interface TimelineEvent {
 const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
   empire,
   showProjections = false,
-  className = ''
+  className = '',
 }) => {
-
   const getPlanetTypeIcon = (planetType: PlanetType): string => {
     switch (planetType) {
-      case 'water': return '🌊';
-      case 'volcanic': return '🌋';
-      case 'rocky': return '🗿';
-      case 'gas': return '☁️';
-      case 'ice': return '❄️';
-      case 'living': return '�';
-      case 'desolate': return '�';
-      case 'exotic': return '✨';
-      default: return '🪐';
+      case 'water':
+        return '🌊';
+      case 'volcanic':
+        return '🌋';
+      case 'rocky':
+        return '🗿';
+      case 'gas':
+        return '☁️';
+      case 'ice':
+        return '❄️';
+      case 'living':
+        return '�';
+      case 'desolate':
+        return '�';
+      case 'exotic':
+        return '✨';
+      default:
+        return '🪐';
     }
   };
 
   const getPlanetTypeColor = (planetType: PlanetType): string => {
     switch (planetType) {
-      case 'water': return '#3B82F6'; // Blue
-      case 'volcanic': return '#EF4444'; // Red
-      case 'rocky': return '#6B7280'; // Gray
-      case 'gas': return '#EC4899'; // Pink
-      case 'ice': return '#06B6D4'; // Cyan
-      case 'living': return '#10B981'; // Emerald
-      case 'desolate': return '#F59E0B'; // Amber
-      case 'exotic': return '#8B5CF6'; // Purple
-      default: return '#6B7280';
+      case 'water':
+        return '#3B82F6'; // Blue
+      case 'volcanic':
+        return '#EF4444'; // Red
+      case 'rocky':
+        return '#6B7280'; // Gray
+      case 'gas':
+        return '#EC4899'; // Pink
+      case 'ice':
+        return '#06B6D4'; // Cyan
+      case 'living':
+        return '#10B981'; // Emerald
+      case 'desolate':
+        return '#F59E0B'; // Amber
+      case 'exotic':
+        return '#8B5CF6'; // Purple
+      default:
+        return '#6B7280';
     }
   };
 
@@ -69,13 +86,13 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
         weight: colony.weight,
         turn: colony.turn,
         planetId: colony.planetId,
-        isProjected: false
+        isProjected: false,
       }));
   }, [empire.colonizationHistory]);
 
   const getEmpireIdentityHint = (): string => {
     if (timelineEvents.length === 0) {
-      return "Establish your first colony to begin specialization";
+      return 'Establish your first colony to begin specialization';
     }
 
     const totalWeight = timelineEvents.reduce((sum, event) => sum + event.weight, 0);
@@ -83,7 +100,7 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
 
     timelineEvents.forEach(event => {
       dominantTypes.set(
-        event.planetType, 
+        event.planetType,
         (dominantTypes.get(event.planetType) || 0) + event.weight
       );
     });
@@ -92,7 +109,7 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
       .sort((a, b) => b[1] - a[1])
       .slice(0, 2);
 
-    if (sortedTypes.length === 0) return "";
+    if (sortedTypes.length === 0) return '';
 
     const [primaryType, primaryWeight] = sortedTypes[0];
     const primaryPercentage = Math.round((primaryWeight / totalWeight) * 100);
@@ -108,26 +125,23 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
       className={`bg-slate-800/50 rounded-xl p-4 ${className}`}
     >
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-white mb-1">
-          Colonization Timeline
-        </h3>
-        <p className="text-sm text-slate-400">
-          {getEmpireIdentityHint()}
-        </p>
+        <h3 className="text-lg font-bold text-white mb-1">Colonization Timeline</h3>
+        <p className="text-sm text-slate-400">{getEmpireIdentityHint()}</p>
       </div>
 
       {timelineEvents.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">🚀</div>
           <p className="text-slate-400 text-sm">
-            Survey planets and establish your first colony to begin your empire's specialization journey
+            Survey planets and establish your first colony to begin your empire's specialization
+            journey
           </p>
         </div>
       ) : (
@@ -142,7 +156,7 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
             >
               {/* Order Badge */}
               <div className="flex-shrink-0">
-                <div 
+                <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                   style={{ backgroundColor: getPlanetTypeColor(event.planetType) }}
                 >
@@ -165,12 +179,12 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
 
               {/* Weight Badge */}
               <div className="flex-shrink-0">
-                <div 
+                <div
                   className="px-3 py-1 rounded-full text-sm font-bold"
-                  style={{ 
+                  style={{
                     backgroundColor: getWeightColor(event.weight) + '30',
                     color: getWeightColor(event.weight),
-                    border: `1px solid ${getWeightColor(event.weight)}50`
+                    border: `1px solid ${getWeightColor(event.weight)}50`,
                   }}
                 >
                   ×{event.weight.toFixed(1)}
@@ -199,9 +213,15 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
               </div>
               <div className="flex-grow">
                 <span className="text-slate-400 text-sm">
-                  Next colony: ×{timelineEvents.length === 0 ? '3.0' : 
-                                timelineEvents.length === 1 ? '2.0' : 
-                                timelineEvents.length === 2 ? '1.5' : '1.2'} weight
+                  Next colony: ×
+                  {timelineEvents.length === 0
+                    ? '3.0'
+                    : timelineEvents.length === 1
+                      ? '2.0'
+                      : timelineEvents.length === 2
+                        ? '1.5'
+                        : '1.2'}{' '}
+                  weight
                 </span>
               </div>
             </motion.div>
@@ -218,7 +238,7 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
               const typeWeight = timelineEvents
                 .filter(e => e.planetType === planetType)
                 .reduce((sum, e) => sum + e.weight, 0);
-              
+
               return (
                 <span
                   key={planetType}
@@ -226,7 +246,7 @@ const ColonizationTimeline: React.FC<ColonizationTimelineProps> = ({
                   style={{
                     backgroundColor: getPlanetTypeColor(planetType) + '20',
                     color: getPlanetTypeColor(planetType),
-                    border: `1px solid ${getPlanetTypeColor(planetType)}30`
+                    border: `1px solid ${getPlanetTypeColor(planetType)}30`,
                   }}
                 >
                   {getPlanetTypeIcon(planetType)} {typeWeight.toFixed(1)}

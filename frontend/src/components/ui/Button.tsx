@@ -19,24 +19,25 @@ export const Button: React.FC<ButtonProps> = ({
   loading = false,
   children,
   onClick,
-  className = ''
+  className = '',
 }) => {
-  const baseClasses = 'font-semibold rounded-lg transition-colors duration-150 flex items-center justify-center gap-2';
-  
+  const baseClasses =
+    'font-semibold rounded-lg transition-colors duration-150 flex items-center justify-center gap-2';
+
   const variantClasses = {
     primary: uiConstants.COLORS.BUTTONS.PRIMARY,
     secondary: uiConstants.COLORS.BUTTONS.SECONDARY,
     success: uiConstants.COLORS.BUTTONS.SUCCESS,
     warning: uiConstants.COLORS.BUTTONS.WARNING,
-    danger: uiConstants.COLORS.BUTTONS.DANGER
+    danger: uiConstants.COLORS.BUTTONS.DANGER,
   };
-  
+
   const sizeClasses = {
     sm: 'px-3 py-1 text-sm',
     md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
+    lg: 'px-6 py-3 text-lg',
   };
-  
+
   return (
     <motion.button
       whileHover={{ scale: disabled ? 1 : 1.05 }}

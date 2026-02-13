@@ -9,9 +9,7 @@ interface SpecializationDashboardProps {
   className?: string;
 }
 
-const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
-  className = ''
-}) => {
+const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({ className = '' }) => {
   const gameState = useGameStore();
   const currentEmpire = gameState.empires[gameState.playerEmpireId];
 
@@ -32,9 +30,7 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="mb-6 px-6 py-4 bg-slate-800/50 rounded-t-xl"
       >
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Empire Specialization Dashboard
-        </h2>
+        <h2 className="text-2xl font-bold text-white mb-2">Empire Specialization Dashboard</h2>
         <p className="text-slate-400">
           Track your empire's technological identity shaped by colonization choices
         </p>
@@ -42,10 +38,9 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-6">
-        
         {/* Specialization Radar - Main focal point */}
         <div className="lg:col-span-5 xl:col-span-4">
-          <EmpireSpecializationRadar 
+          <EmpireSpecializationRadar
             empire={currentEmpire}
             size="large"
             interactive={true}
@@ -55,18 +50,12 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
 
         {/* Colonization Timeline - Shows the journey */}
         <div className="lg:col-span-7 xl:col-span-5">
-          <ColonizationTimeline 
-            empire={currentEmpire}
-            showProjections={true}
-          />
+          <ColonizationTimeline empire={currentEmpire} showProjections={true} />
         </div>
 
         {/* Empire Identity Panel - Strategic insights */}
         <div className="lg:col-span-12 xl:col-span-3">
-          <EmpireIdentityPanel 
-            empire={currentEmpire}
-            showRecommendations={true}
-          />
+          <EmpireIdentityPanel empire={currentEmpire} showRecommendations={true} />
         </div>
       </div>
 
@@ -78,7 +67,6 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
         className="mx-6 mb-6 p-4 bg-slate-800/30 rounded-lg"
       >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-400">
               {currentEmpire.colonizationHistory?.order?.length || 0}
@@ -95,25 +83,25 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
 
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-400">
-              {currentEmpire.techDomainWeights ? 
-                new Set(Object.entries(currentEmpire.techDomainWeights)
-                  .filter(([_, weight]) => weight > 0)
-                  .map(([domain]) => domain)
-                ).size : 0
-              }
+              {currentEmpire.techDomainWeights
+                ? new Set(
+                    Object.entries(currentEmpire.techDomainWeights)
+                      .filter(([_, weight]) => weight > 0)
+                      .map(([domain]) => domain)
+                  ).size
+                : 0}
             </div>
             <div className="text-xs text-slate-400">Active Domains</div>
           </div>
 
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-400">
-              {currentEmpire.colonizationHistory?.order ? 
-                new Set(currentEmpire.colonizationHistory.order.map(c => c.planetType)).size : 0
-              }
+              {currentEmpire.colonizationHistory?.order
+                ? new Set(currentEmpire.colonizationHistory.order.map(c => c.planetType)).size
+                : 0}
             </div>
             <div className="text-xs text-slate-400">Planet Types</div>
           </div>
-
         </div>
       </motion.div>
 
@@ -126,10 +114,22 @@ const SpecializationDashboard: React.FC<SpecializationDashboardProps> = ({
       >
         <h3 className="text-sm font-semibold text-blue-400 mb-2">💡 Specialization Tips</h3>
         <div className="text-xs text-slate-300 space-y-1">
-          <p>• <strong>First colonies matter most:</strong> Your first 3 colonies get 3x, 2x, and 1.5x specialization weight</p>
-          <p>• <strong>Balance vs Focus:</strong> Deep specialization unlocks unique technologies, but diversity provides flexibility</p>
-          <p>• <strong>Hybrid Technologies:</strong> Some advanced techs require colonies on multiple planet types</p>
-          <p>• <strong>Plan ahead:</strong> Use the galaxy map to scout planet types before committing to colonization</p>
+          <p>
+            • <strong>First colonies matter most:</strong> Your first 3 colonies get 3x, 2x, and
+            1.5x specialization weight
+          </p>
+          <p>
+            • <strong>Balance vs Focus:</strong> Deep specialization unlocks unique technologies,
+            but diversity provides flexibility
+          </p>
+          <p>
+            • <strong>Hybrid Technologies:</strong> Some advanced techs require colonies on multiple
+            planet types
+          </p>
+          <p>
+            • <strong>Plan ahead:</strong> Use the galaxy map to scout planet types before
+            committing to colonization
+          </p>
         </div>
       </motion.div>
     </div>

@@ -13,7 +13,7 @@ import {
   Circle,
   ArrowLeft,
   Eye,
-  Users
+  Users,
 } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import type { StarSystem, Planet, Hyperlane } from '../../types/game.d.ts';
@@ -27,7 +27,7 @@ const planetIcons = {
   ice: Snowflake,
   living: Leaf,
   desolate: Skull,
-  exotic: Atom
+  exotic: Atom,
 } as const;
 
 const planetColors = {
@@ -38,9 +38,8 @@ const planetColors = {
   ice: 'text-cyan-400',
   living: 'text-green-400',
   desolate: 'text-yellow-400',
-  exotic: 'text-purple-300'
+  exotic: 'text-purple-300',
 } as const;
-
 
 const starCount = 180;
 // System importance classification
@@ -56,25 +55,34 @@ const getSystemImportance = (system: StarSystem): 'strategic' | 'resource-rich' 
 
 const getSystemSize = (importance: string): string => {
   switch (importance) {
-    case 'strategic': return 'w-6 h-6';
-    case 'resource-rich': return 'w-5 h-5';
-    default: return 'w-4 h-4';
+    case 'strategic':
+      return 'w-6 h-6';
+    case 'resource-rich':
+      return 'w-5 h-5';
+    default:
+      return 'w-4 h-4';
   }
 };
 
 const getSystemColor = (importance: string, isControlled: boolean): string => {
   if (isControlled) {
     switch (importance) {
-      case 'strategic': return 'text-blue-300 drop-shadow-lg';
-      case 'resource-rich': return 'text-blue-400 drop-shadow-md';
-      default: return 'text-blue-500';
+      case 'strategic':
+        return 'text-blue-300 drop-shadow-lg';
+      case 'resource-rich':
+        return 'text-blue-400 drop-shadow-md';
+      default:
+        return 'text-blue-500';
     }
   }
 
   switch (importance) {
-    case 'strategic': return 'text-purple-300';
-    case 'resource-rich': return 'text-yellow-300';
-    default: return 'text-yellow-400';
+    case 'strategic':
+      return 'text-purple-300';
+    case 'resource-rich':
+      return 'text-yellow-300';
+    default:
+      return 'text-yellow-400';
   }
 };
 
@@ -85,7 +93,11 @@ interface HyperlaneNetworkProps {
   playerEmpireId: string;
 }
 
-const HyperlaneNetwork: React.FC<HyperlaneNetworkProps> = ({ systems, hyperlanes, playerEmpireId }) => {
+const HyperlaneNetwork: React.FC<HyperlaneNetworkProps> = ({
+  systems,
+  hyperlanes,
+  playerEmpireId,
+}) => {
   if (!hyperlanes || Object.keys(hyperlanes).length === 0) {
     return null;
   }
@@ -97,28 +109,28 @@ const HyperlaneNetwork: React.FC<HyperlaneNetworkProps> = ({ systems, hyperlanes
           stroke: '#60a5fa',
           strokeWidth: 0.3,
           strokeDasharray: 'none',
-          opacity: 0.8
+          opacity: 0.8,
         };
       case 'unstable':
         return {
           stroke: '#f59e0b',
           strokeWidth: 0.3,
           strokeDasharray: '2,2',
-          opacity: 0.6
+          opacity: 0.6,
         };
       case 'blocked':
         return {
           stroke: '#ef4444',
           strokeWidth: 0.3,
           strokeDasharray: '1,3',
-          opacity: 0.5
+          opacity: 0.5,
         };
       default:
         return {
           stroke: '#94a3b8',
           strokeWidth: 0.3,
           strokeDasharray: '1,2',
-          opacity: 0.4
+          opacity: 0.4,
         };
     }
   };
@@ -129,7 +141,7 @@ const HyperlaneNetwork: React.FC<HyperlaneNetworkProps> = ({ systems, hyperlanes
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
     >
-      {Object.values(hyperlanes).map((hyperlane) => {
+      {Object.values(hyperlanes).map(hyperlane => {
         const fromSystem = systems[hyperlane.fromSystemId];
         const toSystem = systems[hyperlane.toSystemId];
 
@@ -175,14 +187,12 @@ interface SystemNodeProps {
 }
 
 const SystemNode: React.FC<SystemNodeProps> = ({ system, onSystemClick }) => {
-  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
-  const empires = useGameStore((state) => state.empires);
+  const playerEmpireId = useGameStore(state => state.playerEmpireId);
+  const empires = useGameStore(state => state.empires);
 
   const isDiscovered = system.discoveredBy.includes(playerEmpireId);
-  const controllingEmpire = Object.values(empires).find((empire) =>
-    empire.colonies.some((colonyId) =>
-      system.planets.some((planet) => planet.id === colonyId)
-    )
+  const controllingEmpire = Object.values(empires).find(empire =>
+    empire.colonies.some(colonyId => system.planets.some(planet => planet.id === colonyId))
   );
   const isControlled = controllingEmpire?.id === playerEmpireId;
   const importance = getSystemImportance(system);
@@ -226,7 +236,9 @@ const SystemNode: React.FC<SystemNodeProps> = ({ system, onSystemClick }) => {
         />
       )}
 
-      <Star className={`${getSystemSize(importance)} ${getSystemColor(importance, isControlled)}`} />
+      <Star
+        className={`${getSystemSize(importance)} ${getSystemColor(importance, isControlled)}`}
+      />
 
       {controllingEmpire && (
         <div
@@ -266,7 +278,7 @@ interface PlanetDisplayProps {
 }
 
 const PlanetDisplay: React.FC<PlanetDisplayProps> = ({ planet, onPlanetClick }) => {
-  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
+  const playerEmpireId = useGameStore(state => state.playerEmpireId);
   const PlanetIcon = planetIcons[planet.type];
   const planetColor = planetColors[planet.type];
   const isSurveyed = planet.surveyedBy.includes(playerEmpireId);
@@ -298,21 +310,23 @@ const PlanetDisplay: React.FC<PlanetDisplayProps> = ({ planet, onPlanetClick }) 
       <div className="absolute top-10 left-1/2 transform -translate-x-1/2 text-center whitespace-nowrap">
         <div className="text-sm text-slate-200 font-medium">{planet.name}</div>
         <div className="text-xs text-slate-400 capitalize">{planet.type} World</div>
-        {isColonized && (
-          <div className="text-xs text-green-400">Colonized</div>
-        )}
-        {isSurveyed && !isColonized && (
-          <div className="text-xs text-blue-400">Surveyed</div>
-        )}
+        {isColonized && <div className="text-xs text-green-400">Colonized</div>}
+        {isSurveyed && !isColonized && <div className="text-xs text-blue-400">Surveyed</div>}
       </div>
 
       {/* Hover tooltip */}
-      <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100
-                      transition-opacity bg-slate-800 rounded px-2 py-1 text-xs whitespace-nowrap z-10">
+      <div
+        className="absolute -top-16 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100
+                      transition-opacity bg-slate-800 rounded px-2 py-1 text-xs whitespace-nowrap z-10"
+      >
         <div className="text-slate-200 font-medium">{planet.name}</div>
-        <div className="text-slate-400 capitalize">{planet.type} World • Size {planet.size}</div>
+        <div className="text-slate-400 capitalize">
+          {planet.type} World • Size {planet.size}
+        </div>
         {isColonized && <div className="text-green-400">Colony established</div>}
-        {isSurveyed && !isColonized && <div className="text-blue-400">Available for colonization</div>}
+        {isSurveyed && !isColonized && (
+          <div className="text-blue-400">Available for colonization</div>
+        )}
         {!isSurveyed && <div className="text-slate-500">Click to survey</div>}
       </div>
     </motion.div>
@@ -327,8 +341,8 @@ interface SystemDetailViewProps {
 }
 
 const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onPlanetClick }) => {
-  const galaxy = useGameStore((state) => state.galaxy);
-  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
+  const galaxy = useGameStore(state => state.galaxy);
+  const playerEmpireId = useGameStore(state => state.playerEmpireId);
   const detailStarField = useMemo(
     () => generateStarField(galaxy.seed + system.id.length, 120),
     [galaxy.seed, system.id]
@@ -342,7 +356,7 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
     >
       {/* Background stars */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {detailStarField.map((star) => (
+        {detailStarField.map(star => (
           <motion.div
             key={star.id}
             className="absolute rounded-full bg-white"
@@ -393,7 +407,7 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
         >
           <Star className="w-16 h-16 text-yellow-400" />
         </motion.div>
@@ -405,7 +419,7 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
 
       {/* Planets in orbital rings */}
       {system.planets.map((planet, index) => {
-        const orbitRadius = 120 + (index * 60); // pixels from center
+        const orbitRadius = 120 + index * 60; // pixels from center
         const angle = (index * 360) / system.planets.length;
         const x = Math.cos((angle * Math.PI) / 180) * orbitRadius;
         const y = Math.sin((angle * Math.PI) / 180) * orbitRadius;
@@ -417,7 +431,7 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
             style={{
               left: '50%',
               top: '50%',
-              transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%))`
+              transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%))`,
             }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -429,9 +443,9 @@ const SystemDetailView: React.FC<SystemDetailViewProps> = ({ system, onBack, onP
               style={{
                 width: `${orbitRadius * 2}px`,
                 height: `${orbitRadius * 2}px`,
-                left: `${-orbitRadius + (orbitRadius * 0.5)}px`,
-                top: `${-orbitRadius + (orbitRadius * 0.5)}px`,
-                transformOrigin: 'center center'
+                left: `${-orbitRadius + orbitRadius * 0.5}px`,
+                top: `${-orbitRadius + orbitRadius * 0.5}px`,
+                transformOrigin: 'center center',
               }}
             />
 
@@ -447,23 +461,20 @@ export default function GalaxyView() {
   const [currentView, setCurrentView] = useState<'galaxy' | 'system'>('galaxy');
   const [selectedSystem, setSelectedSystem] = useState<StarSystem | null>(null);
 
-  const galaxy = useGameStore((state) => state.galaxy);
-  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
-  const setSelectedPlanet = useGameStore((state) => state.setSelectedPlanet);
-  const setSidePanel = useGameStore((state) => state.setSidePanel);
-  const addNotification = useGameStore((state) => state.addNotification);
-  const surveyPlanet = useGameStore((state) => state.surveyPlanet);
-  const generateHyperlanes = useGameStore((state) => state.generateHyperlanes);
+  const galaxy = useGameStore(state => state.galaxy);
+  const playerEmpireId = useGameStore(state => state.playerEmpireId);
+  const setSelectedPlanet = useGameStore(state => state.setSelectedPlanet);
+  const setSidePanel = useGameStore(state => state.setSidePanel);
+  const addNotification = useGameStore(state => state.addNotification);
+  const surveyPlanet = useGameStore(state => state.surveyPlanet);
+  const generateHyperlanes = useGameStore(state => state.generateHyperlanes);
 
-  const starField = useMemo(
-    () => generateStarField(galaxy.seed, starCount),
-    [galaxy.seed]
-  );
+  const starField = useMemo(() => generateStarField(galaxy.seed, starCount), [galaxy.seed]);
   const systems = useMemo(() => Object.values(galaxy.systems), [galaxy.systems]);
 
   // Statistics for galaxy overview
-  const discoveredSystems = useMemo(() =>
-    systems.filter(system => system.discoveredBy.includes(playerEmpireId)).length,
+  const discoveredSystems = useMemo(
+    () => systems.filter(system => system.discoveredBy.includes(playerEmpireId)).length,
     [systems, playerEmpireId]
   );
 
@@ -476,7 +487,7 @@ export default function GalaxyView() {
       addNotification({
         type: 'success',
         title: 'System Discovered',
-        message: `${system.name} system discovered with ${system.planets.length} planets!`
+        message: `${system.name} system discovered with ${system.planets.length} planets!`,
       });
       return;
     }
@@ -502,7 +513,7 @@ export default function GalaxyView() {
     addNotification({
       type: 'info',
       title: `Planet: ${planet.name}`,
-      message: `${planet.type} world - Click colonize to establish a colony`
+      message: `${planet.type} world - Click colonize to establish a colony`,
     });
   };
 
@@ -529,7 +540,7 @@ export default function GalaxyView() {
     <div className="fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900">
       {/* Background stars */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        {starField.map((star) => (
+        {starField.map(star => (
           <motion.div
             key={star.id}
             className="absolute rounded-full bg-white"
@@ -554,29 +565,26 @@ export default function GalaxyView() {
         />
       </div>
 
-
       {/* Galaxy content */}
       <div className="relative z-20 h-full w-full">
         {/* System nodes */}
-        {systems.map((system) => (
-          <SystemNode
-            key={system.id}
-            system={system}
-            onSystemClick={handleSystemClick}
-          />
+        {systems.map(system => (
+          <SystemNode key={system.id} system={system} onSystemClick={handleSystemClick} />
         ))}
 
         {/* Galaxy info overlay */}
         <div className="absolute top-4 left-4 bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 text-sm">
           <h3 className="font-semibold mb-2 text-slate-100">Galaxy Overview</h3>
           <div className="space-y-1 text-slate-300">
-            <div>Size: <span className="capitalize">{galaxy.size}</span></div>
+            <div>
+              Size: <span className="capitalize">{galaxy.size}</span>
+            </div>
             <div>Systems: {systems.length}</div>
             <div>Discovered: {discoveredSystems}</div>
             <div>Hyperlanes: {Object.keys(galaxy.hyperlanes || {}).length}</div>
             <div>Seed: {galaxy.seed}</div>
           </div>
-          
+
           {/* Debug button for hyperlane generation */}
           {import.meta.env.DEV && Object.keys(galaxy.hyperlanes || {}).length === 0 && (
             <button
@@ -618,7 +626,13 @@ export default function GalaxyView() {
                 <span className="text-xs text-slate-300">Open Route</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-0.5 bg-amber-500 opacity-50" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent 0, transparent 2px, currentColor 2px, currentColor 4px)' }} />
+                <div
+                  className="w-4 h-0.5 bg-amber-500 opacity-50"
+                  style={{
+                    backgroundImage:
+                      'repeating-linear-gradient(90deg, transparent 0, transparent 2px, currentColor 2px, currentColor 4px)',
+                  }}
+                />
                 <span className="text-xs text-slate-300">Unstable</span>
               </div>
             </div>
@@ -639,12 +653,10 @@ export default function GalaxyView() {
         {discoveredSystems > 0 && (
           <div className="absolute top-4 right-4 bg-slate-800/80 backdrop-blur-sm rounded-lg p-4 text-sm">
             <div className="text-slate-100 font-medium mb-1">Navigation</div>
-            <div className="text-slate-300 text-xs">
-              Click discovered systems to view planets
-            </div>
+            <div className="text-slate-300 text-xs">Click discovered systems to view planets</div>
           </div>
         )}
       </div>
     </div>
   );
-};
+}

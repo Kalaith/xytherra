@@ -23,33 +23,49 @@ interface EmpireIdentity {
 const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
   empire,
   showRecommendations = true,
-  className = ''
+  className = '',
 }) => {
-
   const getDomainColor = (domain: TechDomain): string => {
     switch (domain) {
-      case 'weapons': return '#EF4444';
-      case 'shields': return '#3B82F6';
-      case 'biotech': return '#10B981';
-      case 'propulsion': return '#8B5CF6';
-      case 'sensors': return '#EC4899';
-      case 'industry': return '#F59E0B';
-      case 'survival': return '#F97316';
-      case 'experimental': return '#06B6D4';
-      default: return '#6B7280';
+      case 'weapons':
+        return '#EF4444';
+      case 'shields':
+        return '#3B82F6';
+      case 'biotech':
+        return '#10B981';
+      case 'propulsion':
+        return '#8B5CF6';
+      case 'sensors':
+        return '#EC4899';
+      case 'industry':
+        return '#F59E0B';
+      case 'survival':
+        return '#F97316';
+      case 'experimental':
+        return '#06B6D4';
+      default:
+        return '#6B7280';
     }
   };
 
   const getDomainDisplayName = (domain: TechDomain): string => {
     switch (domain) {
-      case 'weapons': return 'Weapons';
-      case 'shields': return 'Shields';
-      case 'biotech': return 'Biotech';
-      case 'propulsion': return 'Propulsion';
-      case 'sensors': return 'Sensors';
-      case 'industry': return 'Industry';
-      case 'survival': return 'Survival';
-      case 'experimental': return 'Experimental';
+      case 'weapons':
+        return 'Weapons';
+      case 'shields':
+        return 'Shields';
+      case 'biotech':
+        return 'Biotech';
+      case 'propulsion':
+        return 'Propulsion';
+      case 'sensors':
+        return 'Sensors';
+      case 'industry':
+        return 'Industry';
+      case 'survival':
+        return 'Survival';
+      case 'experimental':
+        return 'Experimental';
       default: {
         const domainStr = String(domain);
         return domainStr.charAt(0).toUpperCase() + domainStr.slice(1);
@@ -61,14 +77,15 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
     if (!empire.techDomainWeights || !empire.colonizationHistory?.order) {
       return {
         title: 'Nascent Empire',
-        description: 'Your empire awaits its first steps into the stars. Survey and colonize worlds to develop your unique technological specialization.',
+        description:
+          'Your empire awaits its first steps into the stars. Survey and colonize worlds to develop your unique technological specialization.',
         dominantDomains: [],
         badges: ['🚀 Explorer'],
         recommendations: [
           'Survey your first planet to unlock Tier 1 technologies',
           'Your first colony will receive 3x specialization weight',
-          'Choose carefully - early colonies shape your empire identity'
-        ]
+          'Choose carefully - early colonies shape your empire identity',
+        ],
       };
     }
 
@@ -79,7 +96,7 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
         description: 'Your empire awaits its first steps into the stars.',
         dominantDomains: [],
         badges: ['🚀 Explorer'],
-        recommendations: ['Establish your first colony to begin specialization']
+        recommendations: ['Establish your first colony to begin specialization'],
       };
     }
 
@@ -88,16 +105,20 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
       .map(([domain, weight]) => ({
         domain: domain as TechDomain,
         weight,
-        percentage: Math.round((weight / totalWeight) * 100)
+        percentage: Math.round((weight / totalWeight) * 100),
       }))
       .filter(d => d.percentage > 5) // Only show meaningful domains
       .sort((a, b) => b.weight - a.weight);
 
     const dominantDomains = domainStrengths.map(d => ({
       domain: d.domain,
-      strength: d.percentage >= 40 ? 'dominant' as const :
-                d.percentage >= 25 ? 'strong' as const : 'moderate' as const,
-      percentage: d.percentage
+      strength:
+        d.percentage >= 40
+          ? ('dominant' as const)
+          : d.percentage >= 25
+            ? ('strong' as const)
+            : ('moderate' as const),
+      percentage: d.percentage,
     }));
 
     // Generate empire title and description
@@ -150,27 +171,33 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (primaryDomain && primaryDomain.percentage < 40) {
       const domainName = getDomainDisplayName(primaryDomain.domain);
-      recommendations.push(`Consider focusing on ${domainName.toLowerCase()} colonies to strengthen your specialization`);
+      recommendations.push(
+        `Consider focusing on ${domainName.toLowerCase()} colonies to strengthen your specialization`
+      );
     }
 
     if (dominantDomains.length === 1) {
-      recommendations.push('Diversify with a secondary specialization to avoid strategic vulnerability');
+      recommendations.push(
+        'Diversify with a secondary specialization to avoid strategic vulnerability'
+      );
     }
 
     if (colonyCount < 3) {
       recommendations.push('Establish more colonies to unlock higher tier technologies');
     }
 
-    const weakestImportantDomains = ['shields', 'weapons'].filter(domain => 
-      (empire.techDomainWeights[domain as TechDomain] || 0) < totalWeight * 0.15
+    const weakestImportantDomains = ['shields', 'weapons'].filter(
+      domain => (empire.techDomainWeights[domain as TechDomain] || 0) < totalWeight * 0.15
     ) as TechDomain[];
 
     if (weakestImportantDomains.length > 0) {
       const weakDomain = getDomainDisplayName(weakestImportantDomains[0]);
-      recommendations.push(`Consider strengthening ${weakDomain.toLowerCase()} for better strategic balance`);
+      recommendations.push(
+        `Consider strengthening ${weakDomain.toLowerCase()} for better strategic balance`
+      );
     }
 
     return {
@@ -178,38 +205,36 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
       description,
       dominantDomains,
       badges,
-      recommendations
+      recommendations,
     };
   }, [empire]);
 
   const getStrengthColor = (strength: 'dominant' | 'strong' | 'moderate'): string => {
     switch (strength) {
-      case 'dominant': return '#10B981'; // Green
-      case 'strong': return '#3B82F6'; // Blue
-      case 'moderate': return '#F59E0B'; // Amber
-      default: return '#6B7280';
+      case 'dominant':
+        return '#10B981'; // Green
+      case 'strong':
+        return '#3B82F6'; // Blue
+      case 'moderate':
+        return '#F59E0B'; // Amber
+      default:
+        return '#6B7280';
     }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
       className={`bg-slate-800/50 rounded-xl p-4 ${className}`}
     >
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-white mb-2">
-          Empire Identity
-        </h3>
-        
+        <h3 className="text-lg font-bold text-white mb-2">Empire Identity</h3>
+
         <div className="mb-3">
-          <h4 className="text-xl font-semibold text-blue-400 mb-2">
-            {empireIdentity.title}
-          </h4>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            {empireIdentity.description}
-          </p>
+          <h4 className="text-xl font-semibold text-blue-400 mb-2">{empireIdentity.title}</h4>
+          <p className="text-slate-300 text-sm leading-relaxed">{empireIdentity.description}</p>
         </div>
 
         {/* Badges */}
@@ -228,14 +253,12 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
       {/* Domain Strengths */}
       {empireIdentity.dominantDomains.length > 0 && (
         <div className="mb-4">
-          <h5 className="text-sm font-semibold text-slate-300 mb-2">
-            Specialization Breakdown:
-          </h5>
+          <h5 className="text-sm font-semibold text-slate-300 mb-2">Specialization Breakdown:</h5>
           <div className="space-y-2">
             {empireIdentity.dominantDomains.slice(0, 4).map((domain, idx) => (
               <div key={idx} className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: getDomainColor(domain.domain) }}
                   />
@@ -244,14 +267,12 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-white">
-                    {domain.percentage}%
-                  </span>
-                  <span 
+                  <span className="text-sm font-medium text-white">{domain.percentage}%</span>
+                  <span
                     className="px-2 py-1 rounded-full text-xs font-medium"
-                    style={{ 
+                    style={{
                       backgroundColor: getStrengthColor(domain.strength) + '20',
-                      color: getStrengthColor(domain.strength)
+                      color: getStrengthColor(domain.strength),
                     }}
                   >
                     {domain.strength}
@@ -266,9 +287,7 @@ const EmpireIdentityPanel: React.FC<EmpireIdentityPanelProps> = ({
       {/* Recommendations */}
       {showRecommendations && empireIdentity.recommendations.length > 0 && (
         <div>
-          <h5 className="text-sm font-semibold text-slate-300 mb-2">
-            Strategic Recommendations:
-          </h5>
+          <h5 className="text-sm font-semibold text-slate-300 mb-2">Strategic Recommendations:</h5>
           <div className="space-y-2">
             {empireIdentity.recommendations.slice(0, 3).map((rec, idx) => (
               <div key={idx} className="flex items-start space-x-2">

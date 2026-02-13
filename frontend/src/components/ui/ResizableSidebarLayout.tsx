@@ -40,7 +40,9 @@ export const ResizableSidebarLayout: React.FC<ResizableSidebarLayoutProps> = ({
     return clamp(storedValue, minWidth, maxWidth);
   }, [storageKey, minWidth, maxWidth]);
 
-  const [sidebarWidth, setSidebarWidth] = useState(() => storedWidth ?? clamp(initialWidth, minWidth, maxWidth));
+  const [sidebarWidth, setSidebarWidth] = useState(
+    () => storedWidth ?? clamp(initialWidth, minWidth, maxWidth)
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined' || !storageKey) return;
@@ -122,9 +124,7 @@ export const ResizableSidebarLayout: React.FC<ResizableSidebarLayoutProps> = ({
               aria-hidden="true"
             />
           </div>
-          <div className="h-full overflow-hidden">
-            {sidebar}
-          </div>
+          <div className="h-full overflow-hidden">{sidebar}</div>
         </aside>
       )}
       <section className={`flex-1 min-w-0 ${mainClassName ?? ''}`}>{children}</section>

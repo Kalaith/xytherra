@@ -1,23 +1,23 @@
 // Core service for the planet-driven technology system
-import type { 
-  Empire, 
-  Planet, 
-  PlanetType, 
-  TechDomain, 
+import type {
+  Empire,
+  Planet,
+  PlanetType,
+  TechDomain,
   EmpireColonizationHistory,
   PlanetColonization,
   PlanetMastery,
-  SpecializationLevel
+  SpecializationLevel,
 } from '../types/game.d.ts';
 import { TECHNOLOGIES, planetTypes } from '../data/gameData';
 
 // Colonization weight constants
 export const colonizationWeights: Record<number, number> = {
-  1: 3.0,  // First colony - huge impact
-  2: 2.0,  // Second colony - major impact
-  3: 1.5,  // Third colony - significant impact
-  4: 1.2,  // Fourth colony - moderate impact
-  5: 1.0   // Fifth+ colonies - standard impact
+  1: 3.0, // First colony - huge impact
+  2: 2.0, // Second colony - major impact
+  3: 1.5, // Third colony - significant impact
+  4: 1.2, // Fourth colony - moderate impact
+  5: 1.0, // Fifth+ colonies - standard impact
 };
 
 // Specialization thresholds
@@ -25,7 +25,7 @@ export const specializationThresholds = {
   weak: 0,
   moderate: 2,
   strong: 4,
-  dominant: 8
+  dominant: 8,
 } as const;
 
 export class PlanetTechService {
@@ -37,15 +37,15 @@ export class PlanetTechService {
       order: [],
       weights: {
         shields: 0,
-        weapons: 0, 
+        weapons: 0,
         industry: 0,
         propulsion: 0,
         sensors: 0,
         biotech: 0,
         survival: 0,
-        experimental: 0
+        experimental: 0,
       },
-      currentSpecialization: []
+      currentSpecialization: [],
     };
   }
 
@@ -56,12 +56,12 @@ export class PlanetTechService {
     return {
       shields: 'weak',
       weapons: 'weak',
-      industry: 'weak', 
+      industry: 'weak',
       propulsion: 'weak',
       sensors: 'weak',
       biotech: 'weak',
       survival: 'weak',
-      experimental: 'weak'
+      experimental: 'weak',
     };
   }
 
@@ -77,14 +77,17 @@ export class PlanetTechService {
       sensors: 0,
       biotech: 0,
       survival: 0,
-      experimental: 0
+      experimental: 0,
     };
   }
 
   /**
    * Unlock technologies when surveying a planet (Tier 1)
    */
-  static unlockSurveyTechnologies(planet: Planet, _empireId: string): {
+  static unlockSurveyTechnologies(
+    planet: Planet,
+    _empireId: string
+  ): {
     unlockedTechs: string[];
     notifications: string[];
   } {
@@ -107,7 +110,10 @@ export class PlanetTechService {
   /**
    * Unlock technologies when colonizing a planet (Tier 2)
    */
-  static unlockColonyTechnologies(planet: Planet, _empireId: string): {
+  static unlockColonyTechnologies(
+    planet: Planet,
+    _empireId: string
+  ): {
     unlockedTechs: string[];
     notifications: string[];
   } {
@@ -130,7 +136,10 @@ export class PlanetTechService {
   /**
    * Check for mastery technology unlocks (Tier 3)
    */
-  static checkMasteryUnlocks(planet: Planet, empire: Empire): {
+  static checkMasteryUnlocks(
+    planet: Planet,
+    empire: Empire
+  ): {
     unlockedTechs: string[];
     notifications: string[];
   } {
@@ -144,9 +153,10 @@ export class PlanetTechService {
 
     // Find all Tier 3 technologies for this planet type that aren't already unlocked
     const tier3Techs = Object.values(TECHNOLOGIES).filter(
-      tech => tech.requiredPlanetType === planet.type && 
-               tech.tier === 3 && 
-               !empire.technologies.has(tech.id)
+      tech =>
+        tech.requiredPlanetType === planet.type &&
+        tech.tier === 3 &&
+        !empire.technologies.has(tech.id)
     );
 
     tier3Techs.forEach(tech => {
@@ -173,21 +183,21 @@ export class PlanetTechService {
       planetType: planet.type,
       turn,
       order,
-      weight
+      weight,
     };
 
     const updatedOrder = [...empire.colonizationHistory.order, newColonization];
-    
+
     // Recalculate domain weights
     const updatedWeights = this.calculateDomainWeights(updatedOrder);
-    
+
     // Determine current specialization (top 3 domains)
     const currentSpecialization = this.determineSpecialization(updatedWeights);
 
     return {
       order: updatedOrder,
       weights: updatedWeights,
-      currentSpecialization
+      currentSpecialization,
     };
   }
 
@@ -196,8 +206,14 @@ export class PlanetTechService {
    */
   static calculateDomainWeights(colonizations: PlanetColonization[]): Record<TechDomain, number> {
     const weights: Record<TechDomain, number> = {
-      shields: 0, weapons: 0, industry: 0, propulsion: 0,
-      sensors: 0, biotech: 0, survival: 0, experimental: 0
+      shields: 0,
+      weapons: 0,
+      industry: 0,
+      propulsion: 0,
+      sensors: 0,
+      biotech: 0,
+      survival: 0,
+      experimental: 0,
     };
 
     colonizations.forEach(colonization => {
@@ -220,8 +236,13 @@ export class PlanetTechService {
   /**
    * Determine specialization levels for each domain
    */
-  static calculateSpecializationLevels(weights: Record<TechDomain, number>): Record<TechDomain, SpecializationLevel> {
-    const levels: Record<TechDomain, SpecializationLevel> = {} as Record<TechDomain, SpecializationLevel>;
+  static calculateSpecializationLevels(
+    weights: Record<TechDomain, number>
+  ): Record<TechDomain, SpecializationLevel> {
+    const levels: Record<TechDomain, SpecializationLevel> = {} as Record<
+      TechDomain,
+      SpecializationLevel
+    >;
 
     Object.entries(weights).forEach(([domain, weight]) => {
       if (weight >= specializationThresholds.dominant) {
@@ -252,7 +273,10 @@ export class PlanetTechService {
   /**
    * Check if empire can research a specific technology
    */
-  static canResearchTechnology(empire: Empire, techId: string): {
+  static canResearchTechnology(
+    empire: Empire,
+    techId: string
+  ): {
     canResearch: boolean;
     reason?: string;
     requiredPlanets?: PlanetType[];
@@ -270,9 +294,9 @@ export class PlanetTechService {
     // Check prerequisites
     const missingPrereqs = tech.prerequisites.filter(prereq => !empire.technologies.has(prereq));
     if (missingPrereqs.length > 0) {
-      return { 
-        canResearch: false, 
-        reason: `Missing prerequisites: ${missingPrereqs.join(', ')}` 
+      return {
+        canResearch: false,
+        reason: `Missing prerequisites: ${missingPrereqs.join(', ')}`,
       };
     }
 
@@ -290,7 +314,7 @@ export class PlanetTechService {
         return {
           canResearch: false,
           reason: 'Missing required planet types for hybrid technology',
-          requiredPlanets: missingPlanetTypes
+          requiredPlanets: missingPlanetTypes,
         };
       }
     }
@@ -314,25 +338,25 @@ export class PlanetTechService {
       masteryPoints: 0,
       requiredInvestment: 1000, // Base requirement
       masteryBonuses: {},
-      unlocked: false
+      unlocked: false,
     };
   }
 
   /**
    * Update planet mastery progress
    */
-  static updatePlanetMastery(
-    mastery: PlanetMastery,
-    investmentPoints: number
-  ): PlanetMastery {
+  static updatePlanetMastery(mastery: PlanetMastery, investmentPoints: number): PlanetMastery {
     const updatedMastery = { ...mastery };
     updatedMastery.masteryPoints += investmentPoints;
-    updatedMastery.currentLevel = Math.min(100, (updatedMastery.masteryPoints / updatedMastery.requiredInvestment) * 100);
-    
+    updatedMastery.currentLevel = Math.min(
+      100,
+      (updatedMastery.masteryPoints / updatedMastery.requiredInvestment) * 100
+    );
+
     if (updatedMastery.currentLevel >= 100 && !updatedMastery.unlocked) {
       updatedMastery.unlocked = true;
     }
-    
+
     return updatedMastery;
   }
 
@@ -341,9 +365,9 @@ export class PlanetTechService {
    */
   static getEmpireIdentityDescription(empire: Empire): string {
     const specialization = empire.colonizationHistory.currentSpecialization;
-    
+
     if (specialization.length === 0) {
-      return "Unspecialized Empire - No clear technological focus yet.";
+      return 'Unspecialized Empire - No clear technological focus yet.';
     }
 
     const primary = specialization[0];
@@ -351,22 +375,22 @@ export class PlanetTechService {
     const tertiary = specialization[2];
 
     const descriptions = {
-      shields: "Defensive Specialists",
-      weapons: "Military Powerhouse", 
-      industry: "Industrial Giants",
-      propulsion: "Space Nomads",
-      sensors: "Information Masters",
-      biotech: "Bio-Engineers", 
-      survival: "Survivalists",
-      experimental: "Reality Benders"
+      shields: 'Defensive Specialists',
+      weapons: 'Military Powerhouse',
+      industry: 'Industrial Giants',
+      propulsion: 'Space Nomads',
+      sensors: 'Information Masters',
+      biotech: 'Bio-Engineers',
+      survival: 'Survivalists',
+      experimental: 'Reality Benders',
     };
 
-    let description = descriptions[primary] || "Unknown Specialization";
-    
+    let description = descriptions[primary] || 'Unknown Specialization';
+
     if (secondary) {
       description += ` with ${descriptions[secondary]} tendencies`;
     }
-    
+
     if (tertiary) {
       description += ` and ${descriptions[tertiary]} capabilities`;
     }
@@ -379,12 +403,12 @@ export class PlanetTechService {
    */
   static getResearchSpeedModifier(empire: Empire, techDomain: TechDomain): number {
     const specializationLevel = empire.specializationLevel[techDomain];
-    
+
     const modifiers = {
       weak: 1.0,
       moderate: 1.2,
       strong: 1.5,
-      dominant: 2.0
+      dominant: 2.0,
     };
 
     return modifiers[specializationLevel] || 1.0;

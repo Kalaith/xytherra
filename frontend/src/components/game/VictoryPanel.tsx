@@ -3,12 +3,12 @@ import { Trophy, Target, Crown, DollarSign } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 
 const VictoryPanel: React.FC = () => {
-  const checkVictoryConditions = useGameStore((state) => state.checkVictoryConditions);
-  const playerEmpireId = useGameStore((state) => state.playerEmpireId);
-  
+  const checkVictoryConditions = useGameStore(state => state.checkVictoryConditions);
+  const playerEmpireId = useGameStore(state => state.playerEmpireId);
+
   const victoryProgress = React.useMemo(() => {
     const allProgress = checkVictoryConditions();
-    return allProgress.filter(progress => 
+    return allProgress.filter(progress =>
       progress.description.includes(useGameStore.getState().empires[playerEmpireId]?.name || '')
     );
   }, [checkVictoryConditions, playerEmpireId]);
@@ -45,7 +45,7 @@ const VictoryPanel: React.FC = () => {
         <Trophy className="w-5 h-5 mr-2 text-gold" />
         Victory Progress
       </h3>
-      
+
       <div className="space-y-3">
         {victoryProgress.map((victory, index) => (
           <div key={index} className="bg-gray-700 rounded p-3">
@@ -56,23 +56,19 @@ const VictoryPanel: React.FC = () => {
                   {victory.type.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
               </div>
-              <span className="text-gray-300 text-sm">
-                {Math.round(victory.progress * 100)}%
-              </span>
+              <span className="text-gray-300 text-sm">{Math.round(victory.progress * 100)}%</span>
             </div>
-            
+
             {/* Progress Bar */}
             <div className="w-full bg-gray-600 rounded-full h-2 mb-2">
-              <div 
+              <div
                 className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(victory.progress)}`}
                 style={{ width: `${victory.progress * 100}%` }}
               />
             </div>
-            
-            <p className="text-gray-300 text-xs">
-              {victory.description.split(': ')[1]}
-            </p>
-            
+
+            <p className="text-gray-300 text-xs">{victory.description.split(': ')[1]}</p>
+
             {victory.completed && (
               <div className="mt-2 inline-flex items-center px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
                 <Trophy className="w-3 h-3 mr-1" />

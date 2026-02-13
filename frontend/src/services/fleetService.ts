@@ -8,7 +8,7 @@ export class FleetService {
    */
   static createFleet(empireId: string, systemId: string, system: StarSystem): Fleet {
     const fleetId = this.generateFleetId(empireId);
-    
+
     const fleet: Fleet = {
       id: fleetId,
       name: `Fleet ${fleetId.split('-').pop()}`,
@@ -16,48 +16,45 @@ export class FleetService {
       ships: [],
       coordinates: system.coordinates,
       mission: 'idle',
-      movementPoints: gameConstants.FLEET.STARTING_MOVEMENT_POINTS
+      movementPoints: gameConstants.FLEET.STARTING_MOVEMENT_POINTS,
     };
-    
+
     return fleet;
   }
-  
+
   /**
    * Create a starting fleet for a new empire
    */
   static createStartingFleet(empireId: string, homeSystem: StarSystem): Fleet {
     const fleet = this.createFleet(empireId, homeSystem.id, homeSystem);
-    
+
     // Add starting ships
     fleet.name = 'Home Fleet';
-    fleet.ships = [
-      this.createShip('scout'),
-      this.createShip('corvette')
-    ];
+    fleet.ships = [this.createShip('scout'), this.createShip('corvette')];
     fleet.mission = 'defend';
-    
+
     return fleet;
   }
-  
+
   /**
    * Create a ship from a design template
    */
   static createShip(designId: keyof typeof defaultShipDesigns): Ship {
     const design = defaultShipDesigns[designId];
     const shipId = this.generateShipId();
-    
+
     return {
       id: shipId,
       design: {
         ...design,
-        components: []
+        components: [],
       } as ShipDesign,
       health: design.stats.health,
       experience: 0,
-      stats: { ...design.stats }
+      stats: { ...design.stats },
     };
   }
-  
+
   /**
    * Add ships to a fleet
    */
@@ -66,7 +63,7 @@ export class FleetService {
     updatedFleet.ships = [...fleet.ships, ...ships];
     return updatedFleet;
   }
-  
+
   /**
    * Remove damaged ships from fleet
    */
@@ -75,7 +72,7 @@ export class FleetService {
     updatedFleet.ships = fleet.ships.filter(ship => ship.health > damageThreshold);
     return updatedFleet;
   }
-  
+
   /**
    * Move fleet to new coordinates
    */
@@ -85,7 +82,7 @@ export class FleetService {
     updatedFleet.mission = 'explore';
     return updatedFleet;
   }
-  
+
   /**
    * Calculate total fleet combat power
    */
@@ -93,22 +90,22 @@ export class FleetService {
     return fleet.ships.reduce((total, ship) => {
       const basePower = ship.stats.attack + ship.stats.defense;
       const experienceBonus = this.getExperienceBonus(ship.experience);
-      return total + (basePower * experienceBonus);
+      return total + basePower * experienceBonus;
     }, 0);
   }
-  
+
   /**
    * Get experience bonus multiplier for ships
    */
   private static getExperienceBonus(experience: number): number {
     const levels = gameConstants.COMBAT.FLEET_EXPERIENCE_LEVELS;
-    
+
     if (experience >= levels.LEGENDARY.MIN) return levels.LEGENDARY.BONUS;
     if (experience >= levels.ELITE.MIN) return levels.ELITE.BONUS;
     if (experience >= levels.VETERAN.MIN) return levels.VETERAN.BONUS;
     return levels.NOVICE.BONUS;
   }
-  
+
   /**
    * Repair fleet ships (restore health)
    */
@@ -118,14 +115,14 @@ export class FleetService {
       if (ship.health < ship.design.stats.health) {
         return {
           ...ship,
-          health: Math.min(ship.design.stats.health, ship.health + repairAmount)
+          health: Math.min(ship.design.stats.health, ship.health + repairAmount),
         };
       }
       return ship;
     });
     return updatedFleet;
   }
-  
+
   /**
    * Grant experience to fleet ships
    */
@@ -133,27 +130,27 @@ export class FleetService {
     const updatedFleet = { ...fleet };
     updatedFleet.ships = fleet.ships.map(ship => ({
       ...ship,
-      experience: ship.experience + experience
+      experience: ship.experience + experience,
     }));
     return updatedFleet;
   }
-  
+
   /**
    * Check if fleet can reach destination with current movement points
    */
   static canReachDestination(
-    fleet: Fleet, 
+    fleet: Fleet,
     destination: Coordinates
   ): { canReach: boolean; requiredPoints: number } {
     const distance = this.calculateDistance(fleet.coordinates, destination);
     const requiredPoints = Math.ceil(distance / 10); // Assuming 1 movement point = 10 distance units
-    
+
     return {
       canReach: fleet.movementPoints >= requiredPoints,
-      requiredPoints
+      requiredPoints,
     };
   }
-  
+
   /**
    * Calculate distance between two points
    */
@@ -162,7 +159,7 @@ export class FleetService {
     const dy = to.y - from.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
-  
+
   /**
    * Reset fleet movement points (call at turn start)
    */
@@ -171,7 +168,7 @@ export class FleetService {
     updatedFleet.movementPoints = gameConstants.FLEET.STARTING_MOVEMENT_POINTS;
     return updatedFleet;
   }
-  
+
   /**
    * Get fleet status summary
    */
@@ -179,13 +176,12 @@ export class FleetService {
     const totalShips = fleet.ships.length;
     const totalHealth = fleet.ships.reduce((sum, ship) => sum + ship.health, 0);
     const maxHealth = fleet.ships.reduce((sum, ship) => sum + ship.design.stats.health, 0);
-    const averageExperience = totalShips > 0 
-      ? fleet.ships.reduce((sum, ship) => sum + ship.experience, 0) / totalShips 
-      : 0;
-    
+    const averageExperience =
+      totalShips > 0 ? fleet.ships.reduce((sum, ship) => sum + ship.experience, 0) / totalShips : 0;
+
     const healthPercentage = maxHealth > 0 ? (totalHealth / maxHealth) * 100 : 0;
     const combatPower = this.calculateFleetPower(fleet);
-    
+
     return {
       shipCount: totalShips,
       healthPercentage: Math.round(healthPercentage),
@@ -193,10 +189,10 @@ export class FleetService {
       combatPower: Math.round(combatPower),
       movementPoints: fleet.movementPoints,
       mission: fleet.mission,
-      canMove: fleet.movementPoints > 0
+      canMove: fleet.movementPoints > 0,
     };
   }
-  
+
   /**
    * Merge two fleets
    */
@@ -204,40 +200,42 @@ export class FleetService {
     const mergedFleet = { ...primaryFleet };
     mergedFleet.ships = [...primaryFleet.ships, ...secondaryFleet.ships];
     mergedFleet.name = `${primaryFleet.name} Combined`;
-    
+
     // Average movement points
     mergedFleet.movementPoints = Math.min(
-      primaryFleet.movementPoints, 
+      primaryFleet.movementPoints,
       secondaryFleet.movementPoints
     );
-    
+
     return mergedFleet;
   }
-  
+
   /**
    * Split fleet into two
    */
   static splitFleet(fleet: Fleet, shipIndices: number[]): { primaryFleet: Fleet; newFleet: Fleet } {
     const primaryFleet = { ...fleet };
-    const newFleet = this.createFleet(fleet.empireId, 'temp', { coordinates: fleet.coordinates } as StarSystem);
-    
+    const newFleet = this.createFleet(fleet.empireId, 'temp', {
+      coordinates: fleet.coordinates,
+    } as StarSystem);
+
     // Move specified ships to new fleet
     newFleet.ships = shipIndices.map(index => fleet.ships[index]).filter(Boolean);
     primaryFleet.ships = fleet.ships.filter((_, index) => !shipIndices.includes(index));
-    
+
     newFleet.name = `${fleet.name} Detachment`;
     newFleet.movementPoints = fleet.movementPoints;
-    
+
     return { primaryFleet, newFleet };
   }
-  
+
   /**
    * Generate unique fleet ID
    */
   private static generateFleetId(empireId: string): string {
     return `${gameConstants.FLEET.FLEET_ID_PREFIX}${empireId}-${Date.now()}`;
   }
-  
+
   /**
    * Generate unique ship ID
    */

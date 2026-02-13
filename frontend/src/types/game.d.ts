@@ -1,37 +1,28 @@
 // Core game types for Xytherra 4X strategy game
 
-export type PlanetType = 
-  | 'water' 
-  | 'volcanic' 
-  | 'rocky' 
-  | 'gas' 
-  | 'ice' 
-  | 'living' 
-  | 'desolate' 
+export type PlanetType =
+  | 'water'
+  | 'volcanic'
+  | 'rocky'
+  | 'gas'
+  | 'ice'
+  | 'living'
+  | 'desolate'
   | 'exotic';
 
-export type TechDomain = 
-  | 'shields' 
-  | 'weapons' 
-  | 'industry' 
-  | 'propulsion' 
-  | 'sensors' 
-  | 'biotech' 
-  | 'survival' 
+export type TechDomain =
+  | 'shields'
+  | 'weapons'
+  | 'industry'
+  | 'propulsion'
+  | 'sensors'
+  | 'biotech'
+  | 'survival'
   | 'experimental';
 
-export type ResourceType = 
-  | 'energy' 
-  | 'minerals' 
-  | 'food' 
-  | 'research' 
-  | 'alloys' 
-  | 'exoticMatter';
+export type ResourceType = 'energy' | 'minerals' | 'food' | 'research' | 'alloys' | 'exoticMatter';
 
-export type VictoryCondition = 
-  | 'domination' 
-  | 'federation' 
-  | 'techAscendancy';
+export type VictoryCondition = 'domination' | 'federation' | 'techAscendancy';
 
 export interface Coordinates {
   x: number;
@@ -212,35 +203,29 @@ export interface ShipStats {
   range: number;
 }
 
-export type FleetMission = 
-  | 'idle' 
-  | 'explore' 
-  | 'colonize' 
-  | 'attack' 
-  | 'defend' 
-  | 'patrol';
+export type FleetMission = 'idle' | 'explore' | 'colonize' | 'attack' | 'defend' | 'patrol';
 
-export type DiplomaticRelation = 
-  | 'war' 
-  | 'hostile' 
-  | 'neutral' 
-  | 'friendly' 
-  | 'allied' 
+export type DiplomaticRelation =
+  | 'war'
+  | 'hostile'
+  | 'neutral'
+  | 'friendly'
+  | 'allied'
   | 'federated';
 
-export type FactionType = 
-  | 'forge-union' 
-  | 'oceanic-concord' 
-  | 'verdant-kin' 
-  | 'nomad-fleet' 
+export type FactionType =
+  | 'forge-union'
+  | 'oceanic-concord'
+  | 'verdant-kin'
+  | 'nomad-fleet'
   | 'ashborn-syndicate';
 
-export type AIPersonality = 
-  | 'aggressive' 
-  | 'expansionist' 
-  | 'defensive' 
-  | 'diplomatic' 
-  | 'economic' 
+export type AIPersonality =
+  | 'aggressive'
+  | 'expansionist'
+  | 'defensive'
+  | 'diplomatic'
+  | 'economic'
   | 'scientific';
 
 export interface CombatResult {
@@ -291,10 +276,7 @@ export interface Galaxy {
   seed: number;
 }
 
-export type GamePhase = 
-  | 'setup' 
-  | 'playing' 
-  | 'ended';
+export type GamePhase = 'setup' | 'playing' | 'ended';
 
 export interface GameEvent {
   id: string;
@@ -333,21 +315,21 @@ export interface UIState {
   tutorialStep?: number;
 }
 
-export type GameView = 
-  | 'galaxy' 
-  | 'colony' 
-  | 'research' 
-  | 'diplomacy' 
-  | 'fleets' 
+export type GameView =
+  | 'galaxy'
+  | 'colony'
+  | 'research'
+  | 'diplomacy'
+  | 'fleets'
   | 'victory'
   | 'specialization';
 
-export type SidePanel = 
-  | 'none' 
-  | 'planet-info' 
-  | 'colony-management' 
-  | 'fleet-details' 
-  | 'research-tree' 
+export type SidePanel =
+  | 'none'
+  | 'planet-info'
+  | 'colony-management'
+  | 'fleet-details'
+  | 'research-tree'
   | 'empire-overview'
   | 'victory-conditions'
   | 'diplomacy'

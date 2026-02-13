@@ -14,7 +14,9 @@ const generateHyperlaneId = (systemId1: string, systemId2: string): string => {
 };
 
 // Simple hyperlane generation using distance-based connections
-export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<string, Hyperlane> => {
+export const generateHyperlanes = (
+  systems: Record<string, StarSystem>
+): Record<string, Hyperlane> => {
   const systemList = Object.values(systems);
   const hyperlanes: Record<string, Hyperlane> = {};
   const connections = new Set<string>(); // Track connections to avoid duplicates
@@ -33,7 +35,7 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
       .filter(other => other.id !== system.id)
       .map(other => ({
         system: other,
-        distance: calculateDistance(system.coordinates, other.coordinates)
+        distance: calculateDistance(system.coordinates, other.coordinates),
       }))
       .filter(({ distance }) => distance <= maxConnectionDistance)
       .sort((a, b) => a.distance - b.distance);
@@ -55,7 +57,7 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
         toSystemId: targetSystem.id,
         distance,
         travelTime: Math.ceil(distance / 10), // Simple travel time calculation
-        condition: 'open'
+        condition: 'open',
       };
 
       hyperlanes[hyperlaneId] = hyperlane;
@@ -81,13 +83,13 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
     if (!system.hyperlanes || system.hyperlanes.length < minConnectionsPerSystem) {
       // Find the closest systems that we're not already connected to
       const unconnectedSystems = systemList
-        .filter(other =>
-          other.id !== system.id &&
-          (!system.hyperlanes || !system.hyperlanes.includes(other.id))
+        .filter(
+          other =>
+            other.id !== system.id && (!system.hyperlanes || !system.hyperlanes.includes(other.id))
         )
         .map(other => ({
           system: other,
-          distance: calculateDistance(system.coordinates, other.coordinates)
+          distance: calculateDistance(system.coordinates, other.coordinates),
         }))
         .sort((a, b) => a.distance - b.distance);
 
@@ -104,7 +106,7 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
             toSystemId: targetSystem.id,
             distance,
             travelTime: Math.ceil(distance / 10),
-            condition: 'open'
+            condition: 'open',
           };
 
           hyperlanes[hyperlaneId] = hyperlane;
@@ -122,10 +124,13 @@ export const generateHyperlanes = (systems: Record<string, StarSystem>): Record<
   });
 
   console.log(`Generated ${Object.keys(hyperlanes).length} hyperlanes`);
-  console.log(`Systems connectivity:`, systemList.map(s => ({ 
-    name: s.name, 
-    connections: s.hyperlanes?.length || 0 
-  })));
+  console.log(
+    `Systems connectivity:`,
+    systemList.map(s => ({
+      name: s.name,
+      connections: s.hyperlanes?.length || 0,
+    }))
+  );
 
   return hyperlanes;
 };
@@ -142,19 +147,23 @@ export const addHyperlanesToGalaxy = (galaxy: Galaxy): Galaxy => {
 
   return {
     ...galaxy,
-    hyperlanes
+    hyperlanes,
   };
 };
 
 // Get all hyperlanes connected to a specific system
 export const getSystemHyperlanes = (systemId: string, galaxy: Galaxy): Hyperlane[] => {
-  return Object.values(galaxy.hyperlanes).filter(lane =>
-    lane.fromSystemId === systemId || lane.toSystemId === systemId
+  return Object.values(galaxy.hyperlanes).filter(
+    lane => lane.fromSystemId === systemId || lane.toSystemId === systemId
   );
 };
 
 // Check if two systems are connected by a hyperlane
-export const areSystemsConnected = (systemId1: string, systemId2: string, galaxy: Galaxy): boolean => {
+export const areSystemsConnected = (
+  systemId1: string,
+  systemId2: string,
+  galaxy: Galaxy
+): boolean => {
   const hyperlaneId = generateHyperlaneId(systemId1, systemId2);
   return !!galaxy.hyperlanes[hyperlaneId];
 };
@@ -166,16 +175,18 @@ export const ensureGalaxyHasHyperlanes = (galaxy: Galaxy): Galaxy => {
     console.log('Galaxy missing hyperlanes, generating...');
     return addHyperlanesToGalaxy(galaxy);
   }
-  
+
   // Check if all systems have hyperlane references
-  const systemsWithoutHyperlanes = Object.values(galaxy.systems).filter(system => 
-    !system.hyperlanes || system.hyperlanes.length === 0
+  const systemsWithoutHyperlanes = Object.values(galaxy.systems).filter(
+    system => !system.hyperlanes || system.hyperlanes.length === 0
   );
-  
+
   if (systemsWithoutHyperlanes.length > 0) {
-    console.log(`${systemsWithoutHyperlanes.length} systems missing hyperlane references, regenerating...`);
+    console.log(
+      `${systemsWithoutHyperlanes.length} systems missing hyperlane references, regenerating...`
+    );
     return addHyperlanesToGalaxy(galaxy);
   }
-  
+
   return galaxy;
 };

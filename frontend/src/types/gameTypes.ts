@@ -1,10 +1,10 @@
-import type { 
-  Empire, 
-  GameState, 
-  ResourceType, 
+import type {
+  Empire,
+  GameState,
+  ResourceType,
   VictoryCondition,
   Planet,
-  StarSystem
+  StarSystem,
 } from './game.d.ts';
 
 // Utility types for better type safety
@@ -75,12 +75,19 @@ export const isValidEmpireId = (id: string, gameState: GameState): id is EmpireI
 };
 
 export const isValidPlanetId = (id: string, gameState: GameState): id is PlanetId => {
-  return Object.values(gameState.galaxy.systems).some(system => 
+  return Object.values(gameState.galaxy.systems).some(system =>
     system.planets.some(planet => planet.id === id)
   );
 };
 
 export const isValidResourceType = (type: string): type is ResourceType => {
-  const validTypes: ResourceType[] = ['energy', 'minerals', 'food', 'research', 'alloys', 'exoticMatter'];
+  const validTypes: ResourceType[] = [
+    'energy',
+    'minerals',
+    'food',
+    'research',
+    'alloys',
+    'exoticMatter',
+  ];
   return validTypes.includes(type as ResourceType);
 };

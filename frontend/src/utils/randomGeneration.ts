@@ -11,8 +11,7 @@ export const createRandomNumberGenerator = (seed: number): RandomNumberGenerator
     let scrambledState = internalState;
     scrambledState = Math.imul(scrambledState ^ (scrambledState >>> 15), scrambledState | 1);
     scrambledState ^=
-      scrambledState +
-      Math.imul(scrambledState ^ (scrambledState >>> 7), scrambledState | 61);
+      scrambledState + Math.imul(scrambledState ^ (scrambledState >>> 7), scrambledState | 61);
     return ((scrambledState ^ (scrambledState >>> 14)) >>> 0) / 4294967296;
   };
 };
@@ -20,7 +19,7 @@ export const createRandomNumberGenerator = (seed: number): RandomNumberGenerator
 export const generateRandomInteger = (
   randomNumberGenerator: RandomNumberGenerator,
   maxExclusive: number,
-  minInclusive = 0,
+  minInclusive = 0
 ): number => {
   if (maxExclusive <= minInclusive) {
     return minInclusive;
@@ -31,7 +30,7 @@ export const generateRandomInteger = (
 
 export const selectRandomElement = <T>(
   randomNumberGenerator: RandomNumberGenerator,
-  list: readonly T[],
+  list: readonly T[]
 ): T => {
   if (list.length === 0) {
     throw new Error('Cannot pick from an empty list');

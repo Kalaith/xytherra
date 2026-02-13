@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Waves, 
-  Flame, 
-  Leaf, 
-  Wind, 
-  Skull,
-  Play,
-  Settings,
-  Users,
-  Globe
-} from 'lucide-react';
+import { Waves, Flame, Leaf, Wind, Skull, Play, Settings, Users, Globe } from 'lucide-react';
 import { useGameStore } from '../../stores/gameStore';
 import type { FactionType, GameSettings } from '../../types/game.d.ts';
 
@@ -32,7 +22,7 @@ const FACTIONS: FactionInfo[] = [
     color: 'text-blue-400',
     homeworld: 'Water World',
     description: 'Peaceful aquatic civilization focused on defense and sustainability',
-    bonuses: ['+20% shield research', '+25% food production', 'Superior heat dissipation']
+    bonuses: ['+20% shield research', '+25% food production', 'Superior heat dissipation'],
   },
   {
     id: 'forge-union',
@@ -41,7 +31,7 @@ const FACTIONS: FactionInfo[] = [
     color: 'text-red-400',
     homeworld: 'Volcanic World',
     description: 'Industrial militarists who emerged from molten forges',
-    bonuses: ['+20% weapons research', '+15% energy production', 'Thermal resistance']
+    bonuses: ['+20% weapons research', '+15% energy production', 'Thermal resistance'],
   },
   {
     id: 'verdant-kin',
@@ -50,7 +40,7 @@ const FACTIONS: FactionInfo[] = [
     color: 'text-green-400',
     homeworld: 'Living World',
     description: 'Bio-symbiotic collective that merges with planetary ecosystems',
-    bonuses: ['+30% biotech research', '+20% colony growth', 'Biological adaptation']
+    bonuses: ['+30% biotech research', '+20% colony growth', 'Biological adaptation'],
   },
   {
     id: 'nomad-fleet',
@@ -59,7 +49,7 @@ const FACTIONS: FactionInfo[] = [
     color: 'text-purple-400',
     homeworld: 'Gas Giant',
     description: 'Eternal wanderers who harvest storms of gas giants',
-    bonuses: ['+30% propulsion research', '+25% fuel efficiency', 'Superior mobility']
+    bonuses: ['+30% propulsion research', '+25% fuel efficiency', 'Superior mobility'],
   },
   {
     id: 'ashborn-syndicate',
@@ -68,20 +58,20 @@ const FACTIONS: FactionInfo[] = [
     color: 'text-yellow-400',
     homeworld: 'Desolate World',
     description: 'Hardy scavengers who thrive in harsh environments',
-    bonuses: ['+25% survival research', '+30% salvage efficiency', 'Environmental immunity']
-  }
+    bonuses: ['+25% survival research', '+30% salvage efficiency', 'Environmental immunity'],
+  },
 ];
 
 export const GameSetup: React.FC = () => {
-  const startGame = useGameStore((state) => state.startGame);
-  const setPlayerEmpire = useGameStore((state) => state.setPlayerEmpire);
-  
+  const startGame = useGameStore(state => state.startGame);
+  const setPlayerEmpire = useGameStore(state => state.setPlayerEmpire);
+
   const [selectedFaction, setSelectedFaction] = useState<FactionType>('oceanic-concord');
   const [gameSettings, setGameSettings] = useState<GameSettings>({
     galaxySize: 'medium',
     difficulty: 'normal',
     numEmpires: 5,
-    victoryConditions: ['domination', 'federation', 'techAscendancy']
+    victoryConditions: ['domination', 'federation', 'techAscendancy'],
   });
 
   const handleStartGame = () => {
@@ -112,9 +102,9 @@ export const GameSetup: React.FC = () => {
               <Users className="w-6 h-6 mr-2" />
               Choose Your Faction
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {FACTIONS.map((faction) => (
+              {FACTIONS.map(faction => (
                 <motion.div
                   key={faction.id}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -134,10 +124,10 @@ export const GameSetup: React.FC = () => {
                       <p className="text-sm font-semibold">{faction.homeworld}</p>
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-2">{faction.name}</h3>
                   <p className="text-sm text-slate-300 mb-4">{faction.description}</p>
-                  
+
                   <div className="space-y-1">
                     {faction.bonuses.map((bonus, idx) => (
                       <div key={idx} className="text-xs text-slate-400 flex items-center">
@@ -158,7 +148,7 @@ export const GameSetup: React.FC = () => {
                 <Settings className="w-6 h-6 mr-2" />
                 Game Settings
               </h2>
-              
+
               <div className="bg-slate-800/50 rounded-xl p-6 space-y-4">
                 {/* Galaxy Size */}
                 <div>
@@ -168,10 +158,12 @@ export const GameSetup: React.FC = () => {
                   </label>
                   <select
                     value={gameSettings.galaxySize}
-                    onChange={(e) => setGameSettings({
-                      ...gameSettings,
-                      galaxySize: e.target.value as 'small' | 'medium' | 'large'
-                    })}
+                    onChange={e =>
+                      setGameSettings({
+                        ...gameSettings,
+                        galaxySize: e.target.value as 'small' | 'medium' | 'large',
+                      })
+                    }
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   >
                     <option value="small">Small (20 systems)</option>
@@ -185,10 +177,12 @@ export const GameSetup: React.FC = () => {
                   <label className="block text-sm font-medium mb-2">Difficulty</label>
                   <select
                     value={gameSettings.difficulty}
-                    onChange={(e) => setGameSettings({
-                      ...gameSettings,
-                      difficulty: e.target.value as 'easy' | 'normal' | 'hard'
-                    })}
+                    onChange={e =>
+                      setGameSettings({
+                        ...gameSettings,
+                        difficulty: e.target.value as 'easy' | 'normal' | 'hard',
+                      })
+                    }
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   >
                     <option value="easy">Easy</option>
@@ -202,10 +196,12 @@ export const GameSetup: React.FC = () => {
                   <label className="block text-sm font-medium mb-2">Number of Empires</label>
                   <select
                     value={gameSettings.numEmpires}
-                    onChange={(e) => setGameSettings({
-                      ...gameSettings,
-                      numEmpires: parseInt(e.target.value)
-                    })}
+                    onChange={e =>
+                      setGameSettings({
+                        ...gameSettings,
+                        numEmpires: parseInt(e.target.value),
+                      })
+                    }
                     className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   >
                     <option value={3}>3 Empires</option>
@@ -219,9 +215,7 @@ export const GameSetup: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2">Victory Conditions</label>
                   <div className="space-y-2 text-sm">
-                    <div className="text-slate-400">
-                      All victory conditions are enabled:
-                    </div>
+                    <div className="text-slate-400">All victory conditions are enabled:</div>
                     <div className="text-xs text-slate-500 space-y-1">
                       <div>• Domination: Control 60% of galaxy</div>
                       <div>• Federation: Form peaceful alliance</div>
@@ -280,11 +274,12 @@ export const GameSetup: React.FC = () => {
         >
           <h3 className="text-xl font-bold mb-3">Core Innovation: Planets as Technology Trees</h3>
           <p className="text-slate-300 mb-4">
-            Unlike traditional 4X games with linear tech progression, Xytherra's technology system is entirely 
-            driven by planetary colonization. Each planet type unlocks unique technology domains, and the order 
-            of colonization permanently shapes your empire's technological identity.
+            Unlike traditional 4X games with linear tech progression, Xytherra's technology system
+            is entirely driven by planetary colonization. Each planet type unlocks unique technology
+            domains, and the order of colonization permanently shapes your empire's technological
+            identity.
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-slate-700/50 rounded-lg p-4">
               <h4 className="font-semibold mb-2 text-blue-400">Explore</h4>
@@ -295,7 +290,8 @@ export const GameSetup: React.FC = () => {
             <div className="bg-slate-700/50 rounded-lg p-4">
               <h4 className="font-semibold mb-2 text-green-400">Expand</h4>
               <p className="text-slate-400">
-                Specialized colonization based on planet adaptation technology and strategic planning.
+                Specialized colonization based on planet adaptation technology and strategic
+                planning.
               </p>
             </div>
             <div className="bg-slate-700/50 rounded-lg p-4">

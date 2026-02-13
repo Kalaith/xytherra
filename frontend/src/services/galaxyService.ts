@@ -1,4 +1,11 @@
-import type { Galaxy, StarSystem, Planet, GameSettings, PlanetType, PlanetTrait } from '../types/game.d.ts';
+import type {
+  Galaxy,
+  StarSystem,
+  Planet,
+  GameSettings,
+  PlanetType,
+  PlanetTrait,
+} from '../types/game.d.ts';
 import {
   gameConstants,
   getGalaxyDimensions,
@@ -46,18 +53,29 @@ export class GalaxyGenerationService {
     const maximumPlacementAttempts = starSystemCount * 20;
     let placementAttempts = 0;
 
-    while (generatedStarSystems.length < starSystemCount && placementAttempts < maximumPlacementAttempts) {
+    while (
+      generatedStarSystems.length < starSystemCount &&
+      placementAttempts < maximumPlacementAttempts
+    ) {
       const candidateCoordinates = {
         x: randomNumberGenerator() * galaxyDimension,
         y: randomNumberGenerator() * galaxyDimension,
       };
 
       if (
-        this.isValidSystemPlacement(candidateCoordinates, generatedStarSystems, minimumSystemDistance) ||
+        this.isValidSystemPlacement(
+          candidateCoordinates,
+          generatedStarSystems,
+          minimumSystemDistance
+        ) ||
         placementAttempts > maximumPlacementAttempts * 0.8
       ) {
         const systemId = `system-${generatedStarSystems.length}`;
-        const starSystem = this.generateStarSystem(systemId, candidateCoordinates, randomNumberGenerator);
+        const starSystem = this.generateStarSystem(
+          systemId,
+          candidateCoordinates,
+          randomNumberGenerator
+        );
 
         generatedStarSystems.push(starSystem);
         galaxy.systems[systemId] = starSystem;
@@ -72,7 +90,7 @@ export class GalaxyGenerationService {
   private static generateStarSystem(
     systemId: string,
     coordinates: { x: number; y: number },
-    randomNumberGenerator: RandomNumberGenerator,
+    randomNumberGenerator: RandomNumberGenerator
   ): StarSystem {
     return {
       id: systemId,
@@ -86,19 +104,19 @@ export class GalaxyGenerationService {
 
   private static generatePlanetsForSystem(
     systemId: string,
-    randomNumberGenerator: RandomNumberGenerator,
+    randomNumberGenerator: RandomNumberGenerator
   ): Planet[] {
     const maximumPlanetsExclusive = gameConstants.PLANET.MAX_PER_SYSTEM + 1;
     const planetCountInSystem = generateRandomInteger(
       randomNumberGenerator,
       maximumPlanetsExclusive,
-      gameConstants.PLANET.MIN_PER_SYSTEM,
+      gameConstants.PLANET.MIN_PER_SYSTEM
     );
 
     const generatedPlanets: Planet[] = [];
     for (let index = 0; index < planetCountInSystem; index += 1) {
       generatedPlanets.push(
-        this.generatePlanet(`${systemId}-planet-${index}`, systemId, randomNumberGenerator),
+        this.generatePlanet(`${systemId}-planet-${index}`, systemId, randomNumberGenerator)
       );
     }
     return generatedPlanets;
@@ -107,7 +125,7 @@ export class GalaxyGenerationService {
   private static generatePlanet(
     planetId: string,
     systemId: string,
-    randomNumberGenerator: RandomNumberGenerator,
+    randomNumberGenerator: RandomNumberGenerator
   ): Planet {
     const planetTypes: PlanetType[] = [
       'water',
@@ -123,7 +141,7 @@ export class GalaxyGenerationService {
     const planetType = this.weightedRandomChoice(
       planetTypes,
       gameConstants.GALAXY_GENERATION.PLANET_TYPE_WEIGHTS,
-      randomNumberGenerator,
+      randomNumberGenerator
     );
 
     return {
@@ -134,7 +152,7 @@ export class GalaxyGenerationService {
       size: generateRandomInteger(
         randomNumberGenerator,
         gameConstants.PLANET.MAX_SIZE + 1,
-        gameConstants.PLANET.MIN_SIZE,
+        gameConstants.PLANET.MIN_SIZE
       ),
       traits: this.generatePlanetTraits(randomNumberGenerator),
       systemId,
@@ -170,7 +188,7 @@ export class GalaxyGenerationService {
   private static weightedRandomChoice<T>(
     items: readonly T[],
     weights: readonly number[],
-    randomNumberGenerator: RandomNumberGenerator,
+    randomNumberGenerator: RandomNumberGenerator
   ): T {
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
     let selectionThreshold = randomNumberGenerator() * totalWeight;
@@ -273,9 +291,9 @@ export class GalaxyGenerationService {
   static isValidSystemPlacement(
     newCoordinates: { x: number; y: number },
     existingSystems: StarSystem[],
-    minimumDistance = 10,
+    minimumDistance = 10
   ): boolean {
-    return existingSystems.every((system) => {
+    return existingSystems.every(system => {
       const deltaX = newCoordinates.x - system.coordinates.x;
       const deltaY = newCoordinates.y - system.coordinates.y;
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);

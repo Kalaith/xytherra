@@ -13,7 +13,7 @@ import {
   Sparkles,
   Trophy,
   Handshake,
-  Crosshair
+  Crosshair,
 } from 'lucide-react';
 import type { SidePanel, GameView } from '../../types/game.d.ts';
 import type { Planet } from '../../types/game.d.ts';
@@ -31,7 +31,7 @@ const resourceIcons = {
   food: Wheat,
   research: Microscope,
   alloys: Wrench,
-  exoticMatter: Sparkles
+  exoticMatter: Sparkles,
 } as const;
 
 const sidePanelTitles: Record<Exclude<SidePanel, 'none'>, string> = {
@@ -42,7 +42,7 @@ const sidePanelTitles: Record<Exclude<SidePanel, 'none'>, string> = {
   'victory-conditions': 'Victory Conditions',
   diplomacy: 'Diplomacy',
   'combat-log': 'Combat Log',
-  'fleet-details': 'Fleet Details'
+  'fleet-details': 'Fleet Details',
 };
 
 const panelButtons: Array<{
@@ -52,7 +52,7 @@ const panelButtons: Array<{
 }> = [
   { id: 'victory-conditions', label: 'Victory', icon: Trophy },
   { id: 'diplomacy', label: 'Diplomacy', icon: Handshake },
-  { id: 'combat-log', label: 'Combat Log', icon: Crosshair }
+  { id: 'combat-log', label: 'Combat Log', icon: Crosshair },
 ];
 
 const viewButtons: Array<{ id: GameView; label: string }> = [
@@ -60,7 +60,7 @@ const viewButtons: Array<{ id: GameView; label: string }> = [
   { id: 'colony', label: 'Colonies' },
   { id: 'specialization', label: 'Specialization' },
   { id: 'research', label: 'Research' },
-  { id: 'diplomacy', label: 'Diplomacy' }
+  { id: 'diplomacy', label: 'Diplomacy' },
 ];
 
 export const GameUI: React.FC = () => {
@@ -114,7 +114,8 @@ export const GameUI: React.FC = () => {
       {Object.entries(playerEmpire.resources).map(([resource, amount]) => {
         const Icon = resourceIcons[resource as keyof typeof resourceIcons];
         const color = getResourceColor(resource);
-        const income = playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
+        const income =
+          playerEmpire.resourceIncome[resource as keyof typeof playerEmpire.resourceIncome];
 
         return (
           <div key={resource} className="flex items-center gap-2">
@@ -122,7 +123,8 @@ export const GameUI: React.FC = () => {
             <div className="text-white">
               <span className="font-semibold">{Math.floor(amount)}</span>
               <span className="ml-1 text-xs text-slate-400">
-                ({income > 0 ? '+' : ''}{Math.floor(income)})
+                ({income > 0 ? '+' : ''}
+                {Math.floor(income)})
               </span>
             </div>
           </div>
@@ -141,9 +143,7 @@ export const GameUI: React.FC = () => {
               <div className="text-sm text-slate-400">Turn {gameState.turn}</div>
             </div>
           </div>
-          <div className="flex flex-1 min-w-[240px] justify-center">
-            {renderResourceMeters()}
-          </div>
+          <div className="flex flex-1 min-w-[240px] justify-center">{renderResourceMeters()}</div>
           <div className="flex items-center gap-2">
             {panelButtons.map(({ id, label, icon: Icon }) => {
               const isActive = sidePanel === id;
@@ -191,7 +191,9 @@ export const GameUI: React.FC = () => {
           <div className="flex h-full flex-col">
             <div className="flex items-center justify-between border-b border-slate-800/70 px-5 py-3">
               <h3 className="text-sm font-semibold text-white">
-                {sidePanel !== 'none' ? sidePanelTitles[sidePanel as Exclude<SidePanel, 'none'>] : 'Details'}
+                {sidePanel !== 'none'
+                  ? sidePanelTitles[sidePanel as Exclude<SidePanel, 'none'>]
+                  : 'Details'}
               </h3>
               <button
                 type="button"
@@ -210,7 +212,7 @@ export const GameUI: React.FC = () => {
         <div className="relative flex h-full w-full">
           {notificationsToShow.length > 0 && (
             <div className="pointer-events-auto absolute right-4 top-0 z-10 w-80 max-w-full space-y-3">
-              {notificationsToShow.map((notification) => (
+              {notificationsToShow.map(notification => (
                 <motion.div
                   key={notification.id}
                   initial={{ opacity: 0, x: 100 }}
@@ -242,7 +244,7 @@ export const GameUI: React.FC = () => {
       <footer className="pointer-events-auto rounded-2xl border border-slate-800/60 bg-slate-900/85 px-6 py-4 shadow-lg shadow-slate-900/40 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            {viewButtons.map((view) => (
+            {viewButtons.map(view => (
               <Button
                 key={view.id}
                 variant={gameState.uiState.currentView === view.id ? 'primary' : 'secondary'}
@@ -262,9 +264,17 @@ export const GameUI: React.FC = () => {
           )}
 
           <div className="flex items-center gap-4 text-sm text-slate-300">
-            <div>Colonies: <span className="font-semibold text-white">{playerEmpire.colonies.length}</span></div>
-            <div>Fleets: <span className="font-semibold text-white">{playerEmpire.fleets.length}</span></div>
-            <div>Technologies: <span className="font-semibold text-white">{playerEmpire.technologies.size}</span></div>
+            <div>
+              Colonies:{' '}
+              <span className="font-semibold text-white">{playerEmpire.colonies.length}</span>
+            </div>
+            <div>
+              Fleets: <span className="font-semibold text-white">{playerEmpire.fleets.length}</span>
+            </div>
+            <div>
+              Technologies:{' '}
+              <span className="font-semibold text-white">{playerEmpire.technologies.size}</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -282,7 +292,7 @@ const PlanetInfoPanel: React.FC = () => {
 
   let selectedPlanet: Planet | null = null;
   for (const system of Object.values(gameState.galaxy.systems)) {
-    const planet = system.planets.find((p) => p.id === selectedPlanetId);
+    const planet = system.planets.find(p => p.id === selectedPlanetId);
     if (planet) {
       selectedPlanet = planet;
       break;
@@ -317,7 +327,10 @@ const PlanetInfoPanel: React.FC = () => {
               <span className="text-sm text-slate-400">Traits</span>
               <div className="space-y-2">
                 {selectedPlanet.traits.map((trait, idx: number) => (
-                  <div key={idx} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-3">
+                  <div
+                    key={idx}
+                    className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-3"
+                  >
                     <div className="font-medium text-white">{trait.name}</div>
                     <div className="text-xs text-slate-400">{trait.description}</div>
                   </div>
@@ -329,7 +342,9 @@ const PlanetInfoPanel: React.FC = () => {
           {isColonized && (
             <div>
               <span className="text-sm text-slate-400">Status</span>
-              <p className="text-green-400">Colonized {isPlayerColony ? '(Your Colony)' : '(Enemy Colony)'}</p>
+              <p className="text-green-400">
+                Colonized {isPlayerColony ? '(Your Colony)' : '(Enemy Colony)'}
+              </p>
             </div>
           )}
 
@@ -382,8 +397,11 @@ const EmpireOverviewPanel: React.FC = () => {
       <div>
         <h5 className="mb-2 text-sm font-medium text-white">Technologies</h5>
         <div className="max-h-32 space-y-2 overflow-y-auto">
-          {Array.from(playerEmpire.technologies).map((techId) => (
-            <div key={techId} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white">
+          {Array.from(playerEmpire.technologies).map(techId => (
+            <div
+              key={techId}
+              className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white"
+            >
               {techId}
             </div>
           ))}
@@ -391,10 +409,15 @@ const EmpireOverviewPanel: React.FC = () => {
       </div>
 
       <div>
-        <h5 className="mb-2 text-sm font-medium text-white">Colonies ({playerEmpire.colonies.length})</h5>
+        <h5 className="mb-2 text-sm font-medium text-white">
+          Colonies ({playerEmpire.colonies.length})
+        </h5>
         <div className="max-h-32 space-y-2 overflow-y-auto">
-          {playerEmpire.colonies.map((planetId) => (
-            <div key={planetId} className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white">
+          {playerEmpire.colonies.map(planetId => (
+            <div
+              key={planetId}
+              className="rounded-lg border border-slate-800/60 bg-slate-800/40 p-2 text-sm text-white"
+            >
               {planetId}
             </div>
           ))}
@@ -403,6 +426,3 @@ const EmpireOverviewPanel: React.FC = () => {
     </div>
   );
 };
-
-
-

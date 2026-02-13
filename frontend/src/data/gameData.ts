@@ -1,6 +1,15 @@
 // Static game data for planet types and their associated technologies
 
-import type { PlanetType, TechDomain, Technology, PlanetTrait, AIPersonality, FactionType, Empire, Galaxy } from '../types/game.d.ts';
+import type {
+  PlanetType,
+  TechDomain,
+  Technology,
+  PlanetTrait,
+  AIPersonality,
+  FactionType,
+  Empire,
+  Galaxy,
+} from '../types/game.d.ts';
 
 export interface PlanetTypeInfo {
   id: PlanetType;
@@ -36,7 +45,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { food: 1.5, energy: 0.8, research: 1.2 },
     adaptationRequired: false,
-    strategicResources: ['Hydro-Compounds', 'Deep Water']
+    strategicResources: ['Hydro-Compounds', 'Deep Water'],
   },
   volcanic: {
     id: 'volcanic',
@@ -46,7 +55,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { energy: 1.8, minerals: 1.3, food: 0.4 },
     adaptationRequired: true,
-    strategicResources: ['Thermal Plasma', 'Molten Metals']
+    strategicResources: ['Thermal Plasma', 'Molten Metals'],
   },
   rocky: {
     id: 'rocky',
@@ -56,7 +65,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { minerals: 1.6, alloys: 1.4, food: 0.9 },
     adaptationRequired: false,
-    strategicResources: ['Heavy Metals', 'Industrial Minerals']
+    strategicResources: ['Heavy Metals', 'Industrial Minerals'],
   },
   gas: {
     id: 'gas',
@@ -66,7 +75,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { energy: 1.4, research: 1.1, food: 0.1 },
     adaptationRequired: true,
-    strategicResources: ['Exotic Gases', 'Hydrogen Isotopes']
+    strategicResources: ['Exotic Gases', 'Hydrogen Isotopes'],
   },
   ice: {
     id: 'ice',
@@ -76,7 +85,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { research: 1.5, energy: 0.7, food: 0.6 },
     adaptationRequired: true,
-    strategicResources: ['Cryo-Crystals', 'Frozen Compounds']
+    strategicResources: ['Cryo-Crystals', 'Frozen Compounds'],
   },
   living: {
     id: 'living',
@@ -86,7 +95,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'uncommon',
     baseResourceMultipliers: { food: 2.0, research: 1.3, alloys: 0.6 },
     adaptationRequired: false,
-    strategicResources: ['Bio-Essence', 'Living Biomass']
+    strategicResources: ['Bio-Essence', 'Living Biomass'],
   },
   desolate: {
     id: 'desolate',
@@ -96,7 +105,7 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'common',
     baseResourceMultipliers: { minerals: 1.4, exoticMatter: 1.6, food: 0.3 },
     adaptationRequired: true,
-    strategicResources: ['Rare Metals', 'Radioactive Materials']
+    strategicResources: ['Rare Metals', 'Radioactive Materials'],
   },
   exotic: {
     id: 'exotic',
@@ -106,8 +115,8 @@ export const planetTypes: Record<PlanetType, PlanetTypeInfo> = {
     rarity: 'ultra-rare',
     baseResourceMultipliers: { research: 2.5, exoticMatter: 3.0, energy: 0.5 },
     adaptationRequired: true,
-    strategicResources: ['Quantum Crystals', 'Temporal Fragments', 'Dark Energy']
-  }
+    strategicResources: ['Quantum Crystals', 'Temporal Fragments', 'Dark Energy'],
+  },
 };
 
 export const TECHNOLOGIES: Record<string, Technology> = {
@@ -123,7 +132,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { shieldPower: 1.2, shipDefense: 1.1 },
     unlocks: ['shield-capacitor-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'coolant-recycling': {
     id: 'coolant-recycling',
@@ -136,7 +145,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { shipEndurance: 1.3, weaponCooldown: 0.8 },
     unlocks: ['thermal-regulator'],
-    isHybrid: false
+    isHybrid: false,
   },
   'aquatic-habitats': {
     id: 'aquatic-habitats',
@@ -149,7 +158,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { colonyGrowth: 1.5, foodProduction: 1.4 },
     unlocks: ['underwater-city'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Volcanic World Technologies
@@ -164,7 +173,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { shipHealth: 1.15, thermalResistance: 1.5 },
     unlocks: ['armor-plating-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'plasma-cannons': {
     id: 'plasma-cannons',
@@ -177,7 +186,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { weaponDamage: 1.4, energyWeaponPower: 1.3 },
     unlocks: ['plasma-cannon-mk1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'planet-cracking-lances': {
     id: 'planet-cracking-lances',
@@ -190,7 +199,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { siegeWeaponPower: 2.0, planetaryBombardment: 1.8 },
     unlocks: ['thermal-lance'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Rocky World Technologies
@@ -205,7 +214,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { constructionSpeed: 1.2, alloyProduction: 1.15 },
     unlocks: ['factory-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'nano-forging': {
     id: 'nano-forging',
@@ -218,7 +227,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { constructionSpeed: 1.5, buildingCostReduction: 0.8 },
     unlocks: ['nano-factory'],
-    isHybrid: false
+    isHybrid: false,
   },
   'industrial-foundries': {
     id: 'industrial-foundries',
@@ -231,7 +240,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { alloyProduction: 1.8, factoryEfficiency: 1.4 },
     unlocks: ['mega-foundry'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Gas Giant Technologies
@@ -246,7 +255,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { shipSpeed: 1.2, fuelEfficiency: 1.3 },
     unlocks: ['ion-thruster-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'ion-drive-enhancements': {
     id: 'ion-drive-enhancements',
@@ -259,7 +268,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { shipSpeed: 1.5, fleetRange: 1.4 },
     unlocks: ['enhanced-thruster'],
-    isHybrid: false
+    isHybrid: false,
   },
   'gravity-harnessing': {
     id: 'gravity-harnessing',
@@ -272,7 +281,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { planetaryDefense: 1.6, jumpDriveEfficiency: 1.3 },
     unlocks: ['gravity-well-generator'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Ice World Technologies
@@ -287,7 +296,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { sensorRange: 1.3, explorationSpeed: 1.2 },
     unlocks: ['sensor-array-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'cryo-memory-storage': {
     id: 'cryo-memory-storage',
@@ -300,7 +309,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { researchSpeed: 1.3, aiEfficiency: 1.4 },
     unlocks: ['quantum-computer'],
-    isHybrid: false
+    isHybrid: false,
   },
   'crystal-resonance-sensors': {
     id: 'crystal-resonance-sensors',
@@ -313,7 +322,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { cloakDetection: 2.0, sensorPrecision: 1.8 },
     unlocks: ['resonance-detector'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Living World Technologies
@@ -328,7 +337,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 250,
     effects: { populationGrowth: 1.3, foodProduction: 1.2 },
     unlocks: ['bio-lab-1'],
-    isHybrid: false
+    isHybrid: false,
   },
   'organic-armor': {
     id: 'organic-armor',
@@ -341,7 +350,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 500,
     effects: { shipRegeneration: 1.2, biologicalResistance: 1.5 },
     unlocks: ['living-hull'],
-    isHybrid: false
+    isHybrid: false,
   },
   'bio-colonization': {
     id: 'bio-colonization',
@@ -354,7 +363,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 1000,
     effects: { colonizationSpeed: 1.8, terraformingSpeed: 1.6 },
     unlocks: ['bio-terraformer'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Desolate World Technologies
@@ -369,7 +378,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 200,
     effects: { environmentalResistance: 1.4, salvageEfficiency: 1.2 },
     unlocks: ['survival-suit'],
-    isHybrid: false
+    isHybrid: false,
   },
   'radiation-hardened-hulls': {
     id: 'radiation-hardened-hulls',
@@ -382,7 +391,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 400,
     effects: { radiationResistance: 1.8, hazardProtection: 1.5 },
     unlocks: ['hardened-hull'],
-    isHybrid: false
+    isHybrid: false,
   },
   'terraforming-accelerants': {
     id: 'terraforming-accelerants',
@@ -395,7 +404,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 800,
     effects: { terraformingCostReduction: 0.5, terraformingSpeed: 2.0 },
     unlocks: ['terraforming-station'],
-    isHybrid: false
+    isHybrid: false,
   },
 
   // Hybrid Technologies (require multiple planet types)
@@ -411,7 +420,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 600,
     effects: { aoeWeaponPower: 1.8, weaponCooldown: 0.7 },
     unlocks: ['steam-cannon'],
-    isHybrid: true
+    isHybrid: true,
   },
   'cryo-ion-drives': {
     id: 'cryo-ion-drives',
@@ -425,7 +434,7 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 600,
     effects: { fuelEfficiency: 1.8, longRangeTravel: 1.6 },
     unlocks: ['cryo-thruster'],
-    isHybrid: true
+    isHybrid: true,
   },
   'organic-nanoforges': {
     id: 'organic-nanoforges',
@@ -439,8 +448,8 @@ export const TECHNOLOGIES: Record<string, Technology> = {
     cost: 1200,
     effects: { factorySelfRepair: 1.5, adaptiveProduction: 1.4 },
     unlocks: ['living-factory'],
-    isHybrid: true
-  }
+    isHybrid: true,
+  },
 };
 
 export const planetTraits: Record<string, PlanetTrait> = {
@@ -448,44 +457,44 @@ export const planetTraits: Record<string, PlanetTrait> = {
     id: 'resource-rich',
     name: 'Resource Rich',
     description: 'This planet contains abundant natural resources',
-    effects: { minerals: 1.5, energy: 1.3 }
+    effects: { minerals: 1.5, energy: 1.3 },
   },
   'ancient-ruins': {
     id: 'ancient-ruins',
     name: 'Ancient Ruins',
     description: 'Mysterious structures from a lost civilization provide research bonuses',
-    effects: { research: 1.4 }
+    effects: { research: 1.4 },
   },
   'hazardous-atmosphere': {
     id: 'hazardous-atmosphere',
     name: 'Hazardous Atmosphere',
     description: 'Toxic or corrosive atmosphere makes colonization difficult',
-    effects: { colonizationCost: 1.5, populationGrowth: 0.8 }
+    effects: { colonizationCost: 1.5, populationGrowth: 0.8 },
   },
   'pristine-biosphere': {
     id: 'pristine-biosphere',
     name: 'Pristine Biosphere',
     description: 'Untouched ecosystem provides exceptional food production',
-    effects: { food: 2.0, research: 1.2 }
+    effects: { food: 2.0, research: 1.2 },
   },
   'crystalline-formations': {
     id: 'crystalline-formations',
     name: 'Crystalline Formations',
     description: 'Natural crystal structures enhance sensor and research capabilities',
-    effects: { research: 1.3, sensorRange: 1.2 }
+    effects: { research: 1.3, sensorRange: 1.2 },
   },
   'unstable-geology': {
     id: 'unstable-geology',
     name: 'Unstable Geology',
     description: 'Frequent seismic activity causes random events but provides rare materials',
-    effects: { minerals: 1.4, exoticMatter: 1.6, stabilityPenalty: 0.8 }
+    effects: { minerals: 1.4, exoticMatter: 1.6, stabilityPenalty: 0.8 },
   },
   'temporal-anomaly': {
     id: 'temporal-anomaly',
     name: 'Temporal Anomaly',
     description: 'Time flows differently here, affecting research and construction',
-    effects: { research: 1.8, constructionSpeed: 0.6 }
-  }
+    effects: { research: 1.8, constructionSpeed: 0.6 },
+  },
 };
 
 // Starting bonuses for each faction
@@ -496,9 +505,9 @@ export const factionBonuses = {
     bonuses: {
       weaponsResearch: 1.2,
       energyProduction: 1.15,
-      thermalResistance: 1.5
+      thermalResistance: 1.5,
     },
-    startingTechs: ['heat-resistant-hulls']
+    startingTechs: ['heat-resistant-hulls'],
   },
   'oceanic-concord': {
     name: 'Oceanic Concord',
@@ -506,9 +515,9 @@ export const factionBonuses = {
     bonuses: {
       shieldsResearch: 1.2,
       foodProduction: 1.25,
-      shipDefense: 1.1
+      shipDefense: 1.1,
     },
-    startingTechs: ['hydrodynamic-shielding']
+    startingTechs: ['hydrodynamic-shielding'],
   },
   'verdant-kin': {
     name: 'Verdant Kin',
@@ -516,9 +525,9 @@ export const factionBonuses = {
     bonuses: {
       biotechResearch: 1.3,
       populationGrowth: 1.2,
-      biologicalResistance: 1.4
+      biologicalResistance: 1.4,
     },
-    startingTechs: ['basic-biotech']
+    startingTechs: ['basic-biotech'],
   },
   'nomad-fleet': {
     name: 'Nomad Fleet',
@@ -526,9 +535,9 @@ export const factionBonuses = {
     bonuses: {
       propulsionResearch: 1.3,
       fuelEfficiency: 1.25,
-      shipSpeed: 1.15
+      shipSpeed: 1.15,
     },
-    startingTechs: ['basic-ion-drives']
+    startingTechs: ['basic-ion-drives'],
   },
   'ashborn-syndicate': {
     name: 'Ashborn Syndicate',
@@ -536,10 +545,10 @@ export const factionBonuses = {
     bonuses: {
       survivalResearch: 1.25,
       salvageEfficiency: 1.3,
-      environmentalResistance: 1.5
+      environmentalResistance: 1.5,
     },
-    startingTechs: ['basic-survival-tech']
-  }
+    startingTechs: ['basic-survival-tech'],
+  },
 } as const;
 
 // AI Empire Templates for procedural generation
@@ -555,7 +564,7 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 8,
     diplomacyPriority: 3,
     economyPriority: 6,
-    researchPriority: 7
+    researchPriority: 7,
   },
   {
     name: 'Azure Commonwealth',
@@ -568,7 +577,7 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 5,
     diplomacyPriority: 9,
     economyPriority: 8,
-    researchPriority: 6
+    researchPriority: 6,
   },
   {
     name: 'Emerald Collective',
@@ -581,7 +590,7 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 6,
     diplomacyPriority: 7,
     economyPriority: 7,
-    researchPriority: 9
+    researchPriority: 9,
   },
   {
     name: 'Stellar Wanderers',
@@ -594,7 +603,7 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 9,
     diplomacyPriority: 5,
     economyPriority: 6,
-    researchPriority: 7
+    researchPriority: 7,
   },
   {
     name: 'Iron Consortium',
@@ -607,7 +616,7 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 7,
     diplomacyPriority: 6,
     economyPriority: 9,
-    researchPriority: 5
+    researchPriority: 5,
   },
   {
     name: 'Void Guardians',
@@ -620,31 +629,31 @@ export const aiEmpireTemplates: AIEmpireTemplate[] = [
     expansionPriority: 4,
     diplomacyPriority: 6,
     economyPriority: 7,
-    researchPriority: 8
-  }
+    researchPriority: 8,
+  },
 ];
 
 // Combat System Data
 export const combatModifiers = {
   planetaryDefense: 1.5, // Defending on a planet
   fleetExperience: {
-    novice: 1.0,     // 0-10 battles
-    veteran: 1.1,    // 11-25 battles
-    elite: 1.2,      // 26-50 battles
-    legendary: 1.3   // 50+ battles
+    novice: 1.0, // 0-10 battles
+    veteran: 1.1, // 11-25 battles
+    elite: 1.2, // 26-50 battles
+    legendary: 1.3, // 50+ battles
   },
   factionBonuses: {
     'forge-union': { attack: 1.1, defense: 1.0 },
     'oceanic-concord': { attack: 0.95, defense: 1.15 },
     'verdant-kin': { attack: 0.9, defense: 1.1 },
     'nomad-fleet': { attack: 1.05, defense: 0.9 },
-    'ashborn-syndicate': { attack: 1.0, defense: 1.05 }
-  }
+    'ashborn-syndicate': { attack: 1.0, defense: 1.05 },
+  },
 };
 
 // Basic Ship Design Templates
 export const defaultShipDesigns = {
-  'scout': {
+  scout: {
     id: 'scout',
     name: 'Scout',
     hull: 'light',
@@ -655,10 +664,10 @@ export const defaultShipDesigns = {
       attack: 15,
       defense: 10,
       speed: 9,
-      range: 3
-    }
+      range: 3,
+    },
   },
-  'corvette': {
+  corvette: {
     id: 'corvette',
     name: 'Corvette',
     hull: 'light',
@@ -669,10 +678,10 @@ export const defaultShipDesigns = {
       attack: 25,
       defense: 15,
       speed: 7,
-      range: 2
-    }
+      range: 2,
+    },
   },
-  'frigate': {
+  frigate: {
     id: 'frigate',
     name: 'Frigate',
     hull: 'medium',
@@ -683,9 +692,9 @@ export const defaultShipDesigns = {
       attack: 35,
       defense: 25,
       speed: 6,
-      range: 3
-    }
-  }
+      range: 3,
+    },
+  },
 } as const;
 
 // Victory Condition Thresholds
@@ -697,11 +706,11 @@ export const victoryConditions = {
     checkFunction: (empire: Empire, galaxy: Galaxy) => {
       const systems = Object.values(galaxy.systems);
       const totalPlanets = systems.reduce((count, system) => {
-        return count + system.planets.filter((p) => p.colony).length;
+        return count + system.planets.filter(p => p.colony).length;
       }, 0);
       const controlledPlanets = empire.colonies.length;
       return totalPlanets > 0 ? controlledPlanets / totalPlanets : 0;
-    }
+    },
   },
   technology: {
     name: 'Technological Supremacy',
@@ -710,19 +719,21 @@ export const victoryConditions = {
     checkFunction: (empire: Empire, gameData: { TECHNOLOGIES: Record<string, Technology> }) => {
       const totalTechs = Object.keys(gameData.TECHNOLOGIES).length;
       return empire.technologies.size / totalTechs;
-    }
+    },
   },
   diplomatic: {
     name: 'Diplomatic Victory',
     description: 'Form alliances with 75% of surviving empires',
     threshold: 0.75,
     checkFunction: (empire: Empire, empires: Record<string, Empire>) => {
-      const otherEmpires = Object.values(empires).filter((e) => e.id !== empire.id && !e.isDefeated);
-      const allies = otherEmpires.filter((e) => 
-        empire.diplomaticStatus[e.id] === 'allied' || empire.diplomaticStatus[e.id] === 'federated'
+      const otherEmpires = Object.values(empires).filter(e => e.id !== empire.id && !e.isDefeated);
+      const allies = otherEmpires.filter(
+        e =>
+          empire.diplomaticStatus[e.id] === 'allied' ||
+          empire.diplomaticStatus[e.id] === 'federated'
       );
       return otherEmpires.length > 0 ? allies.length / otherEmpires.length : 0;
-    }
+    },
   },
   economic: {
     name: 'Economic Supremacy',
@@ -731,6 +742,6 @@ export const victoryConditions = {
     checkFunction: (empire: Empire) => {
       const resources = Object.values(empire.resources) as number[];
       return resources.reduce((sum: number, val: number) => sum + val, 0);
-    }
-  }
+    },
+  },
 };

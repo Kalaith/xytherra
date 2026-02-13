@@ -10,9 +10,9 @@ import SpecializationDashboard from './components/game/SpecializationDashboard';
 import './styles/globals.css';
 
 function App() {
-  const phase = useGameStore((state) => state.phase);
-  const currentView = useGameStore((state) => state.uiState.currentView);
-  
+  const phase = useGameStore(state => state.phase);
+  const currentView = useGameStore(state => state.uiState.currentView);
+
   const renderGameView = () => {
     switch (currentView) {
       case 'galaxy':
@@ -39,7 +39,7 @@ function App() {
         return <GalaxyView />;
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {phase === 'setup' && <GameSetup />}

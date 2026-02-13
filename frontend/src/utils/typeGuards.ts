@@ -1,18 +1,18 @@
-import type { 
-  Empire, 
-  Planet, 
-  GameState, 
+import type {
+  Empire,
+  Planet,
+  GameState,
   ResourceType,
   PlanetType,
-  VictoryCondition 
+  VictoryCondition,
 } from '../types/game.d.ts';
 
 // Type guards for runtime type checking
 export const isEmpire = (obj: unknown): obj is Empire => {
   if (typeof obj !== 'object' || obj === null) return false;
-  
+
   const empire = obj as Record<string, unknown>;
-  
+
   return (
     typeof empire.id === 'string' &&
     typeof empire.name === 'string' &&
@@ -30,9 +30,9 @@ export const isEmpire = (obj: unknown): obj is Empire => {
 
 export const isPlanet = (obj: unknown): obj is Planet => {
   if (typeof obj !== 'object' || obj === null) return false;
-  
+
   const planet = obj as Record<string, unknown>;
-  
+
   return (
     typeof planet.id === 'string' &&
     typeof planet.name === 'string' &&
@@ -47,14 +47,26 @@ export const isPlanet = (obj: unknown): obj is Planet => {
 
 export const isResourceType = (type: string): type is ResourceType => {
   const validTypes: ResourceType[] = [
-    'energy', 'minerals', 'food', 'research', 'alloys', 'exoticMatter'
+    'energy',
+    'minerals',
+    'food',
+    'research',
+    'alloys',
+    'exoticMatter',
   ];
   return validTypes.includes(type as ResourceType);
 };
 
 export const isPlanetType = (type: string): type is PlanetType => {
   const validTypes: PlanetType[] = [
-    'water', 'volcanic', 'rocky', 'gas', 'ice', 'living', 'desolate', 'exotic'
+    'water',
+    'volcanic',
+    'rocky',
+    'gas',
+    'ice',
+    'living',
+    'desolate',
+    'exotic',
   ];
   return validTypes.includes(type as PlanetType);
 };
@@ -67,9 +79,9 @@ export const isVictoryCondition = (condition: string): condition is VictoryCondi
 // Data validation utilities
 export const validateGameState = (state: unknown): GameState | null => {
   if (typeof state !== 'object' || state === null) return null;
-  
+
   const gameState = state as Record<string, unknown>;
-  
+
   // Basic structure validation
   if (
     typeof gameState.turn !== 'number' ||
@@ -81,7 +93,7 @@ export const validateGameState = (state: unknown): GameState | null => {
   ) {
     return null;
   }
-  
+
   // Validate empires
   if (gameState.empires) {
     for (const [empireId, empire] of Object.entries(gameState.empires)) {
@@ -91,7 +103,7 @@ export const validateGameState = (state: unknown): GameState | null => {
       }
     }
   }
-  
+
   return gameState as unknown as GameState;
 };
 
@@ -114,7 +126,7 @@ export const validateResourceAmount = (amount: number): boolean => {
 
 export const validateCoordinates = (coords: unknown): coords is { x: number; y: number } => {
   if (typeof coords !== 'object' || coords === null) return false;
-  
+
   const c = coords as Record<string, unknown>;
   return (
     typeof c.x === 'number' &&
@@ -141,7 +153,7 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
       food: 50,
       research: 25,
       alloys: 10,
-      exoticMatter: 0
+      exoticMatter: 0,
     },
     resourceIncome: {
       energy: 10,
@@ -149,7 +161,7 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
       food: 5,
       research: 5,
       alloys: 1,
-      exoticMatter: 0
+      exoticMatter: 0,
     },
     technologies: new Set(['basic-manufacturing']),
     researchProgress: {},
@@ -165,9 +177,9 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
         sensors: 0,
         biotech: 0,
         survival: 0,
-        experimental: 0
+        experimental: 0,
       },
-      currentSpecialization: []
+      currentSpecialization: [],
     },
     techDomainWeights: {
       shields: 0,
@@ -177,7 +189,7 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
       sensors: 0,
       biotech: 0,
       survival: 0,
-      experimental: 0
+      experimental: 0,
     },
     specializationLevel: {
       shields: 'weak',
@@ -187,7 +199,7 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
       sensors: 'weak',
       biotech: 'weak',
       survival: 'weak',
-      experimental: 'weak'
+      experimental: 'weak',
     },
     planetMasteries: {},
     fleets: [],
@@ -195,13 +207,13 @@ export const createMockEmpire = (overrides: Partial<Empire> = {}): Empire => {
     victoryProgress: {
       domination: 0,
       federation: 0,
-      techAscendancy: 0
+      techAscendancy: 0,
     },
     combatExperience: 0,
     totalWars: 0,
     planetsConquered: 0,
     techsDiscovered: 1,
-    ...overrides
+    ...overrides,
   };
 };
 
@@ -215,14 +227,14 @@ export const createMockPlanet = (overrides: Partial<Planet> = {}): Planet => {
     traits: [],
     systemId: 'test-system',
     surveyedBy: [],
-    ...overrides
+    ...overrides,
   };
 };
 
 export const createMockGameState = (overrides: Partial<GameState> = {}): GameState => {
   const empire = createMockEmpire();
   const planet = createMockPlanet();
-  
+
   return {
     turn: 1,
     phase: 'playing',
@@ -235,26 +247,26 @@ export const createMockGameState = (overrides: Partial<GameState> = {}): GameSta
           coordinates: { x: 50, y: 50 },
           planets: [planet],
           discoveredBy: [empire.id],
-          hyperlanes: []
-        }
+          hyperlanes: [],
+        },
       },
       hyperlanes: {},
       width: 100,
       height: 100,
-      seed: 12345
+      seed: 12345,
     },
     empires: {
-      [empire.id]: empire
+      [empire.id]: empire,
     },
     activeEvents: [],
     gameSettings: {
       galaxySize: 'medium',
       difficulty: 'normal',
       numEmpires: 1,
-      victoryConditions: ['domination', 'federation', 'techAscendancy']
+      victoryConditions: ['domination', 'federation', 'techAscendancy'],
     },
     playerEmpireId: empire.id,
     isGameOver: false,
-    ...overrides
+    ...overrides,
   };
 };

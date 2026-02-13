@@ -15,9 +15,7 @@ const CombatLog: React.FC<CombatLogProps> = ({ combatResults, onClearLog }) => {
           <Sword className="w-5 h-5 mr-2 text-red-500" />
           Combat Log
         </h3>
-        <div className="text-gray-400 text-center py-4">
-          No battles fought yet
-        </div>
+        <div className="text-gray-400 text-center py-4">No battles fought yet</div>
       </div>
     );
   }
@@ -60,20 +58,20 @@ const CombatLog: React.FC<CombatLogProps> = ({ combatResults, onClearLog }) => {
           </button>
         )}
       </div>
-      
+
       <div className="space-y-3 max-h-64 overflow-y-auto">
         {combatResults.map((result, index) => (
           <div key={index} className="bg-gray-700 rounded p-3">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-white font-medium">
-                Battle #{combatResults.length - index}
-              </div>
-              <div className={`flex items-center px-2 py-1 rounded-full text-xs ${getWinnerColor(result.winner)}`}>
+              <div className="text-white font-medium">Battle #{combatResults.length - index}</div>
+              <div
+                className={`flex items-center px-2 py-1 rounded-full text-xs ${getWinnerColor(result.winner)}`}
+              >
                 {getWinnerIcon(result.winner)}
                 <span className="ml-1 capitalize">{result.winner} Victory</span>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 text-xs">
               {/* Attacker Stats */}
               <div className="bg-gray-600 rounded p-2">
@@ -88,7 +86,7 @@ const CombatLog: React.FC<CombatLogProps> = ({ combatResults, onClearLog }) => {
                   <div>Experience: +{result.experienceGained[result.attacker.empire] || 0}</div>
                 </div>
               </div>
-              
+
               {/* Defender Stats */}
               <div className="bg-gray-600 rounded p-2">
                 <div className="text-blue-400 font-medium mb-1 flex items-center">
@@ -103,7 +101,7 @@ const CombatLog: React.FC<CombatLogProps> = ({ combatResults, onClearLog }) => {
                 </div>
               </div>
             </div>
-            
+
             {result.planetCaptured && (
               <div className="mt-2 flex items-center text-xs text-yellow-400 bg-yellow-500/20 rounded px-2 py-1">
                 <Activity className="w-3 h-3 mr-1" />

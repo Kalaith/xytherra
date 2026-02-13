@@ -1,10 +1,10 @@
-export type Result<T, E = Error> = 
+export type Result<T, E = Error> =
   | { success: true; data: T; error?: never }
   | { success: false; error: E; data?: never };
 
 export class GameError extends Error {
   constructor(
-    message: string, 
+    message: string,
     public readonly code: string,
     public readonly context?: Record<string, unknown>
   ) {
@@ -13,32 +13,30 @@ export class GameError extends Error {
   }
 }
 
-export const createResult = <T>(data: T): Result<T> => ({ 
-  success: true, 
-  data 
+export const createResult = <T>(data: T): Result<T> => ({
+  success: true,
+  data,
 });
 
-export const createError = <E extends Error>(error: E): Result<never, E> => ({ 
-  success: false, 
-  error 
+export const createError = <E extends Error>(error: E): Result<never, E> => ({
+  success: false,
+  error,
 });
 
-export const safeExecute = <T>(
-  operation: () => T, 
-  errorContext?: string
-): Result<T> => {
+export const safeExecute = <T>(operation: () => T, errorContext?: string): Result<T> => {
   try {
     const result = operation();
     return createResult(result);
   } catch (error) {
-    const gameError = error instanceof GameError 
-      ? error 
-      : new GameError(
-          error instanceof Error ? error.message : 'Unknown error', 
-          'EXECUTION_ERROR',
-          { originalError: error, context: errorContext }
-        );
-    
+    const gameError =
+      error instanceof GameError
+        ? error
+        : new GameError(
+            error instanceof Error ? error.message : 'Unknown error',
+            'EXECUTION_ERROR',
+            { originalError: error, context: errorContext }
+          );
+
     return createError(gameError);
   }
 };
@@ -46,20 +44,21 @@ export const safeExecute = <T>(
 // Utility for handling async operations
 export const safeExecuteAsync = async <T>(
   operation: () => Promise<T>,
-  errorContext?: string  
+  errorContext?: string
 ): Promise<Result<T>> => {
   try {
     const result = await operation();
     return createResult(result);
   } catch (error) {
-    const gameError = error instanceof GameError 
-      ? error 
-      : new GameError(
-          error instanceof Error ? error.message : 'Unknown async error',
-          'ASYNC_ERROR',
-          { originalError: error, context: errorContext }
-        );
-    
+    const gameError =
+      error instanceof GameError
+        ? error
+        : new GameError(
+            error instanceof Error ? error.message : 'Unknown async error',
+            'ASYNC_ERROR',
+            { originalError: error, context: errorContext }
+          );
+
     return createError(gameError);
   }
 };
@@ -76,14 +75,14 @@ export interface ErrorReport {
 
 export const createErrorReport = (error: GameError): ErrorReport => {
   const severity = getSeverityFromCode(error.code);
-  
+
   return {
     message: error.message,
     severity,
     timestamp: Date.now(),
     userFriendlyMessage: getUserFriendlyMessage(error),
     actionable: isActionable(error.code),
-    recoveryOptions: getRecoveryOptions(error.code)
+    recoveryOptions: getRecoveryOptions(error.code),
   };
 };
 
@@ -118,7 +117,11 @@ const isActionable = (code: string): boolean => {
 const getRecoveryOptions = (code: string): string[] | undefined => {
   switch (code) {
     case 'INSUFFICIENT_RESOURCES':
-      return ['Wait for resource income', 'Trade with other empires', 'Focus on resource production'];
+      return [
+        'Wait for resource income',
+        'Trade with other empires',
+        'Focus on resource production',
+      ];
     case 'PLANET_NOT_SURVEYED':
       return ['Send a survey mission', 'Build more exploration ships'];
     default:
