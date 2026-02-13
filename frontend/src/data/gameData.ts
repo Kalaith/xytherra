@@ -1,3 +1,4 @@
+
 // Static game data for planet types and their associated technologies
 
 import type {
@@ -745,3 +746,4 @@ export const victoryConditions = {
     },
   },
 };
+

@@ -157,6 +157,7 @@ export interface Empire {
   totalWars: number;
   planetsConquered: number;
   techsDiscovered: number;
+  isDefeated?: boolean;
 }
 
 export interface Fleet {
