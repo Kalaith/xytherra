@@ -5,14 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/xytherra/', // Set base path for subpath deployment
+  base: '/xytherra/',
   resolve: {
     alias: {
       '@': '/src',
     },
-  },
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
   },
 });
