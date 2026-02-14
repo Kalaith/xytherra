@@ -110,7 +110,7 @@ export const useCachedCalculation = <T>(
     calculationCache.set(cacheKey, { value, timestamp: Date.now() });
 
     return value;
-  }, [key, calculation, ...dependencies]);
+  }, [key, calculation, dependencies]);
 };
 
 // Performance monitoring hook
