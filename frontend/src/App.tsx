@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameSetup } from './components/game/GameSetup';
 import GalaxyView from './components/game/GalaxyView';
@@ -12,6 +12,13 @@ import './styles/globals.css';
 function App() {
   const phase = useGameStore(state => state.phase);
   const currentView = useGameStore(state => state.uiState.currentView);
+  const loadBackendState = useGameStore(state => state.loadBackendState);
+
+  useEffect(() => {
+    void loadBackendState().catch(error => {
+      console.error('Failed to load Xytherra backend state:', error);
+    });
+  }, [loadBackendState]);
 
   const renderGameView = () => {
     switch (currentView) {

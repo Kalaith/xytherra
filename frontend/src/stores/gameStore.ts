@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { webhatcheryGameApi, type WebHatcheryGameState } from '../api/webhatcheryGameApi';
 import type {
   GameState,
   Empire,
@@ -31,11 +32,13 @@ import { AIService } from '../services/aiService';
 import { FleetService } from '../services/fleetService';
 import { PlanetTechService } from '../services/planetTechService';
 import { ensureGalaxyHasHyperlanes } from '../services/hyperlaneService';
+import { useWebHatcherySessionStore } from './webhatcherySessionStore';
 
 const maxCombatLogEntries = 25;
 
 interface GameStore extends GameState {
   // Game Actions
+  loadBackendState: () => Promise<void>;
   nextTurn: () => void;
   startGame: (settings: GameSettings) => void;
   endGame: (winner?: string, victoryType?: VictoryCondition) => void;
@@ -114,12 +117,135 @@ const createInitialUIState = (): UIState => ({
   combatLog: [],
 });
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const loadOrCreateBackendGame = async (): Promise<WebHatcheryGameState> => {
+  const sessionStore = useWebHatcherySessionStore.getState();
+  try {
+    return await sessionStore.loadGame();
+  } catch {
+    return sessionStore.continueAsGuest();
+  }
+};
+
+const syncSessionState = (gameState: WebHatcheryGameState): void => {
+  useWebHatcherySessionStore.setState({
+    gameState,
+    user: gameState.user,
+    isLoading: false,
+    error: null,
+  });
+};
+
+const serializeEmpires = (empires: Record<string, Empire>): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(empires).map(([empireId, empire]) => [
+      empireId,
+      {
+        ...empire,
+        technologies: [...empire.technologies],
+      },
+    ])
+  );
+
+const restoreEmpires = (value: unknown): Record<string, Empire> => {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return Object.entries(value).reduce<Record<string, Empire>>((empires, [empireId, rawEmpire]) => {
+    if (!isRecord(rawEmpire)) {
+      return empires;
+    }
+
+    const technologyValue = rawEmpire.technologies;
+    const technologies = Array.isArray(technologyValue)
+      ? new Set(technologyValue.filter((technology): technology is string => typeof technology === 'string'))
+      : technologyValue instanceof Set
+        ? technologyValue
+        : new Set<string>();
+
+    empires[empireId] = {
+      ...(rawEmpire as unknown as Empire),
+      technologies,
+    };
+    return empires;
+  }, {});
+};
+
+const toBackendSnapshot = (state: GameStore): Record<string, unknown> => ({
+  turn: state.turn,
+  phase: state.phase,
+  galaxy: state.galaxy,
+  empires: serializeEmpires(state.empires),
+  activeEvents: state.activeEvents,
+  gameSettings: state.gameSettings,
+  playerEmpireId: state.playerEmpireId,
+  isGameOver: state.isGameOver,
+  winner: state.winner,
+  victoryType: state.victoryType,
+  uiState: {
+    ...state.uiState,
+    notifications: [],
+    combatLog: state.uiState.combatLog.slice(-maxCombatLogEntries),
+  },
+});
+
+let backendSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+const syncBackendSnapshot = (intent: string, snapshot: Record<string, unknown>): void => {
+  if (backendSyncTimer) {
+    clearTimeout(backendSyncTimer);
+  }
+
+  backendSyncTimer = setTimeout(() => {
+    void webhatcheryGameApi
+      .applyIntent(intent, { state: snapshot })
+      .then(syncSessionState)
+      .catch(error => {
+        console.error('Failed to sync Xytherra backend state:', error);
+      });
+  }, 500);
+};
+
 export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
       // Initial state
       ...createInitialGameState(),
       uiState: createInitialUIState(),
+
+      loadBackendState: async () => {
+        const gameState = await loadOrCreateBackendGame();
+        syncSessionState(gameState);
+        const backendState = gameState.save.state;
+        if (!isRecord(backendState) || !isRecord(backendState.gameState)) {
+          return;
+        }
+
+        const savedState = backendState.gameState;
+        const savedUiState = isRecord(savedState.uiState) ? savedState.uiState : null;
+        const combatLog = Array.isArray(savedUiState?.combatLog)
+          ? (savedUiState.combatLog as CombatResult[]).slice(-maxCombatLogEntries)
+          : [];
+
+        set({
+          ...(savedState as Partial<GameState>),
+          galaxy: isRecord(savedState.galaxy)
+            ? ensureGalaxyHasHyperlanes(savedState.galaxy as unknown as GameState['galaxy'])
+            : createInitialGameState().galaxy,
+          empires: restoreEmpires(savedState.empires),
+          uiState: savedUiState
+            ? {
+                ...createInitialUIState(),
+                ...savedUiState,
+                notifications: [],
+                combatLog,
+              }
+            : createInitialUIState(),
+        });
+      },
 
       // Game Actions
       nextTurn: () => {
@@ -876,7 +1002,7 @@ export const useGameStore = create<GameStore>()(
         turn: state.turn,
         phase: state.phase,
         galaxy: state.galaxy,
-        empires: state.empires,
+        empires: serializeEmpires(state.empires),
         gameSettings: state.gameSettings,
         playerEmpireId: state.playerEmpireId,
         isGameOver: state.isGameOver,
@@ -902,6 +1028,26 @@ export const useGameStore = create<GameStore>()(
     }
   )
 );
+
+useGameStore.subscribe((state, previousState) => {
+  if (
+    state.turn === previousState.turn &&
+    state.phase === previousState.phase &&
+    state.galaxy === previousState.galaxy &&
+    state.empires === previousState.empires &&
+    state.activeEvents === previousState.activeEvents &&
+    state.gameSettings === previousState.gameSettings &&
+    state.playerEmpireId === previousState.playerEmpireId &&
+    state.isGameOver === previousState.isGameOver &&
+    state.winner === previousState.winner &&
+    state.victoryType === previousState.victoryType &&
+    state.uiState === previousState.uiState
+  ) {
+    return;
+  }
+
+  syncBackendSnapshot('state_updated', toBackendSnapshot(state));
+});
 
 // Helper function to validate technology research
 function validateTechResearch(
